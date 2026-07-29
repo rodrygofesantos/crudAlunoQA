@@ -1,616 +1,1996 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>Análise preditiva de casos de teste</title>
-  <style>
-    :root {
-      --bg: #eef3f7;
-      --paper: #ffffff;
-      --ink: #17212b;
-      --muted: #52616f;
-      --line: #d5dee6;
-      --primary: #005380;
-      --primary-soft: #e8f4f8;
-      --quote: #fff8dc;
-      --code: #edf2f6;
-    }
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="description" content="Dashboard executivo da análise preditiva baseada em risco dos casos de teste do sistema Academia Alunos.">
+    <title>Dashboard de Risco de Testes — Academia Alunos</title>
+    <style>
+        :root {
+            --azul-950: #082a3c;
+            --azul-900: #0b3850;
+            --azul-800: #005380;
+            --azul-700: #086a97;
+            --azul-200: #bde4ef;
+            --azul-100: #e5f4f8;
+            --fundo: #f3f7f9;
+            --superficie: #ffffff;
+            --texto: #17232d;
+            --texto-suave: #5a6a76;
+            --borda: #d9e3e8;
+            --baixo: #2e7d5b;
+            --baixo-fundo: #e3f3ec;
+            --moderado: #9b6a05;
+            --moderado-fundo: #fff3ce;
+            --alto: #b64d0b;
+            --alto-fundo: #ffeadc;
+            --critico: #b4232d;
+            --critico-fundo: #ffe4e7;
+            --sombra: 0 12px 30px rgb(13 52 72 / 9%);
+            --raio: 16px;
+        }
 
-    * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
-    html {
-      scroll-behavior: smooth;
-      background: var(--bg);
-    }
+        html {
+            scroll-behavior: smooth;
+            background: var(--fundo);
+        }
 
-    body {
-      margin: 0;
-      color: var(--ink);
-      font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+        body {
+            margin: 0;
+            color: var(--texto);
+            background:
+                radial-gradient(circle at 100% 0, rgb(116 201 227 / 18%), transparent 28rem),
+                var(--fundo);
+            font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
 
-    main {
-      width: min(1180px, calc(100% - 32px));
-      margin: 32px auto;
-      padding: clamp(28px, 5vw, 72px);
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      box-shadow: 0 16px 40px rgb(21 52 73 / 10%);
-    }
+        button,
+        input {
+            font: inherit;
+        }
 
-    h1, h2, h3 {
-      color: #103b55;
-      line-height: 1.25;
-      text-wrap: balance;
-    }
+        button {
+            cursor: pointer;
+        }
 
-    h1 {
-      margin: 0 0 1.2em;
-      padding-bottom: .55em;
-      border-bottom: 4px solid var(--primary);
-      font-size: clamp(2rem, 4vw, 3.15rem);
-    }
+        a {
+            color: inherit;
+        }
 
-    h2 {
-      margin-top: 2.4em;
-      padding-bottom: .3em;
-      border-bottom: 1px solid var(--line);
-      font-size: 1.65rem;
-    }
+        .pular {
+            position: absolute;
+            left: 1rem;
+            top: -5rem;
+            z-index: 20;
+            padding: .7rem 1rem;
+            border-radius: 8px;
+            color: #fff;
+            background: var(--azul-950);
+        }
 
-    h3 {
-      margin-top: 1.8em;
-      font-size: 1.25rem;
-    }
+        .pular:focus {
+            top: 1rem;
+        }
 
-    h1 span, h2 span, h3 span { display: none; }
+        .hero {
+            position: relative;
+            overflow: hidden;
+            color: #fff;
+            background:
+                linear-gradient(125deg, rgb(8 42 60 / 98%), rgb(0 83 128 / 93%)),
+                var(--azul-950);
+        }
 
-    p, li { max-width: 92ch; }
-    li + li { margin-top: .38em; }
+        .hero::after {
+            content: "";
+            position: absolute;
+            right: -8rem;
+            bottom: -12rem;
+            width: 32rem;
+            height: 32rem;
+            border: 1px solid rgb(255 255 255 / 16%);
+            border-radius: 50%;
+            box-shadow:
+                0 0 0 4rem rgb(255 255 255 / 4%),
+                0 0 0 8rem rgb(255 255 255 / 3%);
+        }
 
-    a { color: var(--primary); }
+        .hero__conteudo {
+            position: relative;
+            z-index: 1;
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 44px 0 38px;
+        }
 
-    blockquote {
-      margin: 1.5em 0;
-      padding: 1em 1.2em;
-      border-left: 5px solid #d1a500;
-      background: var(--quote);
-      color: #443a16;
-    }
+        .sobrelinha {
+            margin: 0 0 .5rem;
+            color: #bde4ef;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+        }
 
-    blockquote p { margin: 0; }
+        h1 {
+            max-width: 800px;
+            margin: 0;
+            font-size: clamp(2rem, 5vw, 3.45rem);
+            line-height: 1.08;
+            letter-spacing: -.035em;
+        }
 
-    code {
-      padding: .14em .38em;
-      border-radius: 5px;
-      background: var(--code);
-      color: #773b18;
-      font: .91em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
+        .hero__descricao {
+            max-width: 780px;
+            margin: 1rem 0 0;
+            color: #e0f0f5;
+            font-size: 1.05rem;
+        }
 
-    pre {
-      overflow: auto;
-      padding: 1rem;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #16232c;
-      color: #f4f7f9;
-    }
+        .hero__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .65rem;
+            margin-top: 1.35rem;
+        }
 
-    pre code { padding: 0; background: transparent; color: inherit; }
+        .hero__meta span {
+            padding: .38rem .65rem;
+            border: 1px solid rgb(255 255 255 / 22%);
+            border-radius: 999px;
+            background: rgb(255 255 255 / 8%);
+            color: #eef8fb;
+            font-size: .82rem;
+        }
 
-    .table-wrap {
-      overflow-x: auto;
-      margin: 1.25em 0 1.8em;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-    }
+        .aviso {
+            display: flex;
+            align-items: flex-start;
+            gap: .7rem;
+            max-width: 850px;
+            margin-top: 1.25rem;
+            padding: .85rem 1rem;
+            border-left: 4px solid #f2cc64;
+            border-radius: 0 10px 10px 0;
+            background: rgb(0 0 0 / 16%);
+            color: #fff8dc;
+        }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .91rem;
-    }
+        .aviso strong {
+            white-space: nowrap;
+        }
 
-    th, td {
-      padding: .72rem .8rem;
-      border-right: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-      vertical-align: top;
-    }
+        .navegacao {
+            position: sticky;
+            z-index: 10;
+            top: 0;
+            border-bottom: 1px solid var(--borda);
+            background: rgb(255 255 255 / 94%);
+            box-shadow: 0 4px 18px rgb(13 52 72 / 7%);
+            backdrop-filter: blur(12px);
+        }
 
-    th:last-child, td:last-child { border-right: 0; }
-    tbody tr:last-child td { border-bottom: 0; }
+        .navegacao__lista {
+            display: flex;
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 0;
+            overflow-x: auto;
+            list-style: none;
+            scrollbar-width: thin;
+        }
 
-    th {
-      position: sticky;
-      top: 0;
-      background: #dfeff5;
-      color: #103b55;
-      font-weight: 700;
-    }
+        .navegacao a {
+            display: block;
+            padding: .9rem .85rem;
+            color: var(--texto-suave);
+            font-size: .86rem;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+        }
 
-    tbody tr:nth-child(even) { background: #f8fafb; }
-    tbody tr:hover { background: var(--primary-soft); }
+        .navegacao a:hover,
+        .navegacao a:focus-visible {
+            color: var(--azul-800);
+            background: var(--azul-100);
+        }
 
-    footer {
-      margin-top: 4rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: .85rem;
-    }
+        main {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 28px 0 64px;
+        }
 
-    @media (max-width: 680px) {
-      main {
-        width: 100%;
-        margin: 0;
-        padding: 22px 18px 40px;
-        border: 0;
-        border-radius: 0;
-      }
+        section {
+            scroll-margin-top: 74px;
+            margin-top: 34px;
+        }
 
-      h2 { margin-top: 2em; }
-      th, td { min-width: 130px; }
-    }
+        .secao-cabecalho {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
 
-    @media print {
-      @page { size: A4; margin: 14mm; }
+        h2 {
+            margin: 0;
+            color: var(--azul-950);
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            line-height: 1.2;
+            letter-spacing: -.02em;
+        }
 
-      html, body { background: #fff; }
+        h3 {
+            margin: 0;
+            color: var(--azul-950);
+            font-size: 1.03rem;
+        }
 
-      main {
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        border: 0;
-        box-shadow: none;
-      }
+        .secao-cabecalho p {
+            max-width: 650px;
+            margin: .35rem 0 0;
+            color: var(--texto-suave);
+        }
 
-      h1 { font-size: 25pt; }
-      h2 { font-size: 17pt; break-after: avoid; }
-      h3 { font-size: 13pt; break-after: avoid; }
-      blockquote, table, pre { break-inside: avoid; }
-      th { position: static; }
-      a { color: inherit; text-decoration: none; }
-      footer { display: none; }
-    }
-  </style>
+        .grade-kpi {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .kpi {
+            min-height: 128px;
+            padding: 1rem;
+            border: 1px solid var(--borda);
+            border-radius: var(--raio);
+            background: var(--superficie);
+            box-shadow: var(--sombra);
+        }
+
+        .kpi__rotulo {
+            display: block;
+            min-height: 2.5em;
+            color: var(--texto-suave);
+            font-size: .79rem;
+            font-weight: 700;
+            letter-spacing: .025em;
+            text-transform: uppercase;
+        }
+
+        .kpi__valor {
+            display: block;
+            margin-top: .25rem;
+            color: var(--azul-950);
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .kpi__nota {
+            display: block;
+            margin-top: .55rem;
+            color: var(--texto-suave);
+            font-size: .78rem;
+        }
+
+        .grade-resumo {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
+            gap: 18px;
+            margin-top: 18px;
+        }
+
+        .painel {
+            padding: 1.15rem;
+            border: 1px solid var(--borda);
+            border-radius: var(--raio);
+            background: var(--superficie);
+            box-shadow: var(--sombra);
+        }
+
+        .painel__topo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+
+        .painel__topo p {
+            margin: .2rem 0 0;
+            color: var(--texto-suave);
+            font-size: .82rem;
+        }
+
+        .distribuicao {
+            display: flex;
+            min-height: 54px;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #edf2f4;
+        }
+
+        .distribuicao__segmento {
+            display: flex;
+            min-width: 46px;
+            align-items: center;
+            justify-content: center;
+            padding: .45rem;
+            border: 0;
+            color: #fff;
+            font-weight: 800;
+        }
+
+        .distribuicao__segmento small {
+            display: block;
+            font-size: .72rem;
+            font-weight: 600;
+        }
+
+        .fundo-baixo { background: var(--baixo); }
+        .fundo-moderado { background: var(--moderado); }
+        .fundo-alto { background: var(--alto); }
+        .fundo-critico { background: var(--critico); }
+
+        .legenda {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem 1rem;
+            margin-top: .85rem;
+            color: var(--texto-suave);
+            font-size: .8rem;
+        }
+
+        .legenda span {
+            display: inline-flex;
+            align-items: center;
+            gap: .38rem;
+        }
+
+        .legenda i {
+            width: .65rem;
+            height: .65rem;
+            border-radius: 3px;
+        }
+
+        .top-casos {
+            display: grid;
+            gap: .55rem;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .top-caso {
+            display: grid;
+            grid-template-columns: 2.1rem 4rem 1fr auto;
+            align-items: center;
+            gap: .65rem;
+            width: 100%;
+            padding: .7rem .75rem;
+            border: 1px solid var(--borda);
+            border-radius: 10px;
+            color: var(--texto);
+            background: #fff;
+            text-align: left;
+        }
+
+        .top-caso:hover,
+        .top-caso:focus-visible {
+            border-color: var(--azul-700);
+            background: var(--azul-100);
+        }
+
+        .top-caso__posicao {
+            display: grid;
+            width: 2rem;
+            height: 2rem;
+            place-items: center;
+            border-radius: 50%;
+            color: #fff;
+            background: var(--azul-950);
+            font-weight: 800;
+        }
+
+        .top-caso__id {
+            color: var(--azul-800);
+            font-weight: 800;
+        }
+
+        .top-caso__titulo {
+            overflow: hidden;
+            font-size: .88rem;
+            font-weight: 650;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .risco-numero {
+            min-width: 2.2rem;
+            color: var(--critico);
+            font-size: 1.08rem;
+            font-weight: 900;
+            text-align: right;
+        }
+
+        .matriz-legenda-eixo {
+            margin: 0 0 .7rem 4.7rem;
+            color: var(--texto-suave);
+            font-size: .78rem;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .matriz-area {
+            overflow-x: auto;
+        }
+
+        .matriz {
+            display: grid;
+            grid-template-columns: 4rem repeat(5, minmax(126px, 1fr));
+            gap: 6px;
+            min-width: 760px;
+        }
+
+        .matriz__cabecalho,
+        .matriz__eixo {
+            display: grid;
+            min-height: 40px;
+            place-items: center;
+            color: var(--texto-suave);
+            font-size: .78rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .matriz__eixo {
+            line-height: 1.2;
+        }
+
+        .matriz__celula {
+            min-height: 98px;
+            padding: .5rem;
+            border: 1px solid transparent;
+            border-radius: 10px;
+        }
+
+        .matriz__celula--baixo {
+            border-color: #b5dac9;
+            background: var(--baixo-fundo);
+        }
+
+        .matriz__celula--moderado {
+            border-color: #ead68c;
+            background: var(--moderado-fundo);
+        }
+
+        .matriz__celula--alto {
+            border-color: #edc5a9;
+            background: var(--alto-fundo);
+        }
+
+        .matriz__celula--critico {
+            border-color: #efb7bd;
+            background: var(--critico-fundo);
+        }
+
+        .matriz__valor {
+            display: block;
+            margin-bottom: .35rem;
+            color: rgb(23 35 45 / 58%);
+            font-size: .7rem;
+            font-weight: 800;
+            text-align: right;
+        }
+
+        .matriz__casos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+        }
+
+        .chip-caso {
+            padding: .3rem .48rem;
+            border: 1px solid rgb(0 0 0 / 12%);
+            border-radius: 7px;
+            color: var(--texto);
+            background: rgb(255 255 255 / 80%);
+            font-size: .73rem;
+            font-weight: 800;
+        }
+
+        button.chip-caso:hover,
+        button.chip-caso:focus-visible {
+            color: #fff;
+            background: var(--azul-950);
+        }
+
+        .grade-hotspots {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+            gap: 18px;
+        }
+
+        .barras {
+            display: grid;
+            gap: .72rem;
+        }
+
+        .barra {
+            display: grid;
+            grid-template-columns: 9.5rem 1fr 3.3rem;
+            align-items: center;
+            gap: .7rem;
+        }
+
+        .barra__rotulo {
+            font-size: .83rem;
+            font-weight: 700;
+        }
+
+        .barra__trilho {
+            height: 16px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e9eff2;
+        }
+
+        .barra__valor {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--azul-700), #35a5c5);
+        }
+
+        .barra__numero {
+            color: var(--azul-950);
+            font-size: .8rem;
+            font-weight: 800;
+            text-align: right;
+        }
+
+        .chamadas {
+            display: grid;
+            gap: .75rem;
+        }
+
+        .chamada {
+            padding: .9rem;
+            border-left: 4px solid var(--azul-700);
+            border-radius: 0 10px 10px 0;
+            background: var(--azul-100);
+        }
+
+        .chamada--impacto {
+            border-color: var(--critico);
+            background: var(--critico-fundo);
+        }
+
+        .chamada strong {
+            display: block;
+            color: var(--azul-950);
+        }
+
+        .chamada p {
+            margin: .25rem 0 0;
+            color: var(--texto-suave);
+            font-size: .84rem;
+        }
+
+        .raias {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .raia {
+            overflow: hidden;
+            border: 1px solid var(--borda);
+            border-radius: var(--raio);
+            background: var(--superficie);
+            box-shadow: var(--sombra);
+        }
+
+        .raia__cabecalho {
+            padding: .85rem 1rem;
+            border-bottom: 1px solid var(--borda);
+        }
+
+        .raia__cabecalho strong {
+            display: block;
+            color: var(--azul-950);
+            font-size: 1rem;
+        }
+
+        .raia__cabecalho span {
+            color: var(--texto-suave);
+            font-size: .76rem;
+        }
+
+        .raia--p0 .raia__cabecalho { border-top: 5px solid var(--critico); }
+        .raia--p1 .raia__cabecalho { border-top: 5px solid var(--alto); }
+        .raia--p2 .raia__cabecalho { border-top: 5px solid var(--moderado); }
+        .raia--p3 .raia__cabecalho { border-top: 5px solid var(--baixo); }
+
+        .raia__lista {
+            display: grid;
+            gap: .6rem;
+            padding: .85rem;
+            margin: 0;
+            list-style: none;
+        }
+
+        .raia__item {
+            display: grid;
+            grid-template-columns: 1.65rem 3.3rem 1fr;
+            align-items: start;
+            gap: .45rem;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid #e8eef1;
+        }
+
+        .raia__item:last-child {
+            padding-bottom: 0;
+            border: 0;
+        }
+
+        .raia__ordem {
+            display: grid;
+            width: 1.55rem;
+            height: 1.55rem;
+            place-items: center;
+            border-radius: 6px;
+            color: var(--texto-suave);
+            background: #edf2f4;
+            font-size: .72rem;
+            font-weight: 800;
+        }
+
+        .raia__caso {
+            color: var(--azul-800);
+            font-size: .78rem;
+            font-weight: 900;
+        }
+
+        .raia__texto {
+            color: var(--texto-suave);
+            font-size: .78rem;
+            line-height: 1.35;
+        }
+
+        .observacao {
+            margin: .9rem 0 0;
+            padding: .75rem .9rem;
+            border-radius: 10px;
+            color: #55420b;
+            background: var(--moderado-fundo);
+            font-size: .82rem;
+        }
+
+        .controles {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: .9rem;
+        }
+
+        .busca {
+            min-width: min(100%, 270px);
+            flex: 1;
+            padding: .65rem .75rem;
+            border: 1px solid #b9c8cf;
+            border-radius: 9px;
+            color: var(--texto);
+            background: #fff;
+        }
+
+        .filtro {
+            padding: .6rem .72rem;
+            border: 1px solid var(--borda);
+            border-radius: 999px;
+            color: var(--texto-suave);
+            background: #fff;
+            font-size: .8rem;
+            font-weight: 800;
+        }
+
+        .filtro[aria-pressed="true"] {
+            border-color: var(--azul-800);
+            color: #fff;
+            background: var(--azul-800);
+        }
+
+        .tabela-container {
+            overflow-x: auto;
+            border: 1px solid var(--borda);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: var(--sombra);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: .72rem .75rem;
+            border-bottom: 1px solid #e4ebef;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: var(--azul-950);
+            background: #eaf3f6;
+            font-size: .74rem;
+            letter-spacing: .02em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        tbody tr:hover {
+            background: #f7fafb;
+        }
+
+        .numero {
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+        }
+
+        .caso-link {
+            padding: 0;
+            border: 0;
+            color: var(--azul-800);
+            background: transparent;
+            font-weight: 900;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .selo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 5.2rem;
+            padding: .28rem .48rem;
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 850;
+        }
+
+        .selo--baixo {
+            color: #17593f;
+            background: var(--baixo-fundo);
+        }
+
+        .selo--moderado {
+            color: #755000;
+            background: var(--moderado-fundo);
+        }
+
+        .selo--alto {
+            color: #873704;
+            background: var(--alto-fundo);
+        }
+
+        .selo--critico {
+            color: #8c1520;
+            background: var(--critico-fundo);
+        }
+
+        .contador-resultados {
+            color: var(--texto-suave);
+            font-size: .82rem;
+            font-weight: 700;
+        }
+
+        .auditoria-resumo {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .mini-kpi {
+            padding: .85rem 1rem;
+            border-left: 4px solid var(--alto);
+            border-radius: 0 10px 10px 0;
+            background: var(--alto-fundo);
+        }
+
+        .mini-kpi strong {
+            display: block;
+            color: var(--azul-950);
+            font-size: 1.25rem;
+        }
+
+        .mini-kpi span {
+            color: var(--texto-suave);
+            font-size: .78rem;
+        }
+
+        .tabela-auditoria {
+            min-width: 900px;
+            font-size: .82rem;
+        }
+
+        .tabela-auditoria td:first-child {
+            width: 23%;
+            color: var(--azul-950);
+            font-weight: 750;
+        }
+
+        .tabela-lacunas {
+            min-width: 880px;
+            font-size: .82rem;
+        }
+
+        .metodo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .metodo ul {
+            margin: .7rem 0 0;
+            padding-left: 1.2rem;
+            color: var(--texto-suave);
+        }
+
+        .metodo li + li {
+            margin-top: .35rem;
+        }
+
+        dialog {
+            width: min(760px, calc(100% - 28px));
+            max-height: min(86vh, 850px);
+            padding: 0;
+            overflow: hidden;
+            border: 0;
+            border-radius: 18px;
+            color: var(--texto);
+            background: #fff;
+            box-shadow: 0 28px 80px rgb(0 0 0 / 28%);
+        }
+
+        dialog::backdrop {
+            background: rgb(5 25 35 / 66%);
+            backdrop-filter: blur(3px);
+        }
+
+        .dialogo__cabecalho {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.25rem 1.35rem;
+            color: #fff;
+            background: var(--azul-950);
+        }
+
+        .dialogo__cabecalho p {
+            margin: 0 0 .25rem;
+            color: #bde4ef;
+            font-size: .75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .dialogo__cabecalho h2 {
+            color: #fff;
+            font-size: 1.35rem;
+        }
+
+        .dialogo__fechar {
+            display: grid;
+            min-width: 2.4rem;
+            height: 2.4rem;
+            place-items: center;
+            border: 1px solid rgb(255 255 255 / 28%);
+            border-radius: 9px;
+            color: #fff;
+            background: transparent;
+            font-size: 1.35rem;
+        }
+
+        .dialogo__corpo {
+            max-height: calc(86vh - 92px);
+            padding: 1.25rem 1.35rem 1.5rem;
+            overflow-y: auto;
+        }
+
+        .dialogo__metricas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-bottom: 1rem;
+        }
+
+        .dialogo__metricas span {
+            padding: .35rem .55rem;
+            border-radius: 7px;
+            color: var(--azul-950);
+            background: var(--azul-100);
+            font-size: .78rem;
+            font-weight: 750;
+        }
+
+        .detalhes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .8rem;
+            margin: 0;
+        }
+
+        .detalhes > div {
+            padding: .85rem;
+            border: 1px solid var(--borda);
+            border-radius: 10px;
+            background: #f8fafb;
+        }
+
+        .detalhes dt {
+            color: var(--azul-800);
+            font-size: .73rem;
+            font-weight: 850;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+        }
+
+        .detalhes dd {
+            margin: .28rem 0 0;
+            color: var(--texto-suave);
+            font-size: .86rem;
+        }
+
+        .rodape {
+            padding: 1.2rem 0 2.5rem;
+            border-top: 1px solid var(--borda);
+            color: var(--texto-suave);
+            font-size: .8rem;
+            text-align: center;
+        }
+
+        .oculto {
+            display: none !important;
+        }
+
+        @media (max-width: 960px) {
+            .grade-kpi {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .grade-resumo,
+            .grade-hotspots {
+                grid-template-columns: 1fr;
+            }
+
+            .raias {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .hero__conteudo,
+            .navegacao__lista,
+            main {
+                width: min(100% - 22px, 1180px);
+            }
+
+            .hero__conteudo {
+                padding: 32px 0 30px;
+            }
+
+            .aviso {
+                display: block;
+            }
+
+            .aviso strong {
+                display: block;
+                margin-bottom: .2rem;
+            }
+
+            .grade-kpi {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .kpi:last-child {
+                grid-column: 1 / -1;
+            }
+
+            .top-caso {
+                grid-template-columns: 2rem 3.6rem 1fr;
+            }
+
+            .top-caso__titulo {
+                grid-column: 2 / -1;
+                white-space: normal;
+            }
+
+            .risco-numero {
+                grid-column: 3;
+                grid-row: 1;
+            }
+
+            .raias,
+            .auditoria-resumo,
+            .metodo,
+            .detalhes {
+                grid-template-columns: 1fr;
+            }
+
+            .barra {
+                grid-template-columns: 7.5rem 1fr 3rem;
+            }
+
+            .secao-cabecalho {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
+
+            body {
+                background: #fff;
+                font-size: 10px;
+            }
+
+            .hero {
+                color: var(--texto);
+                background: #fff;
+            }
+
+            .hero::after,
+            .navegacao,
+            .controles,
+            dialog,
+            .rodape {
+                display: none;
+            }
+
+            .hero__conteudo,
+            main {
+                width: 100%;
+                padding: 12px 0;
+            }
+
+            .hero__descricao,
+            .hero__meta span,
+            .aviso {
+                color: var(--texto);
+            }
+
+            .hero__meta span,
+            .aviso {
+                border-color: var(--borda);
+                background: #fff;
+            }
+
+            h1 {
+                color: var(--azul-950);
+                font-size: 24px;
+            }
+
+            section {
+                break-inside: avoid;
+                margin-top: 18px;
+            }
+
+            .painel,
+            .kpi,
+            .raia,
+            .tabela-container {
+                box-shadow: none;
+            }
+
+            .grade-kpi {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .grade-resumo,
+            .grade-hotspots {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .raias {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .tabela-container {
+                overflow: visible;
+            }
+
+            .tabela-auditoria,
+            .tabela-lacunas {
+                min-width: 0;
+            }
+
+            .matriz {
+                min-width: 0;
+                grid-template-columns: 3rem repeat(5, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
-  <main id="top">
+    <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 
-<h1 id="label-An-C3-A1lise+preditiva+baseada+em+risco+dos+casos+de+teste+funcionais">Análise preditiva baseada em risco dos casos de teste funcionais<span><a href="#label-An-C3-A1lise+preditiva+baseada+em+risco+dos+casos+de+teste+funcionais">&para;</a> <a href="#top">&uarr;</a></span></h1>
+    <header class="hero">
+        <div class="hero__conteudo">
+            <p class="sobrelinha">Academia Alunos · Engenharia de Qualidade</p>
+            <h1>Dashboard de risco dos casos de teste</h1>
+            <p class="hero__descricao">
+                Priorização executiva do CRUD de alunos com auditoria da especificação,
+                matriz de probabilidade × impacto, hotspots e plano de execução.
+            </p>
+            <div class="hero__meta" aria-label="Metadados da análise">
+                <span>Documento analisado: CASOS_DE_TESTE_FUNCIONAIS.md</span>
+                <span>20 casos avaliados</span>
+                <span>Código-fonte inspecionado</span>
+                <span>Atualizado em 29/07/2026</span>
+            </div>
+            <div class="aviso">
+                <strong>Limite do modelo:</strong>
+                <span>Esta é uma estimativa heurística de risco, e não uma probabilidade estatística calculada a partir de dados históricos.</span>
+            </div>
+        </div>
+    </header>
 
-<h2 id="label-1.+Escopo-2C+m-C3-A9todo+e+limita-C3-A7-C3-B5es">1. Escopo, método e limitações<span><a href="#label-1.+Escopo-2C+m-C3-A9todo+e+limita-C3-A7-C3-B5es">&para;</a> <a href="#top">&uarr;</a></span></h2>
+    <nav class="navegacao" aria-label="Seções do dashboard">
+        <ul class="navegacao__lista">
+            <li><a href="#visao-geral">Visão geral</a></li>
+            <li><a href="#matriz-risco">Matriz de risco</a></li>
+            <li><a href="#hotspots">Hotspots</a></li>
+            <li><a href="#execucao">Execução P0–P3</a></li>
+            <li><a href="#ranking">Ranking</a></li>
+            <li><a href="#auditoria">Auditoria</a></li>
+            <li><a href="#lacunas">Lacunas</a></li>
+            <li><a href="#metodo">Método</a></li>
+        </ul>
+    </nav>
 
-<p>Esta análise considera os 20 casos identificados diretamente pelas seções <code>CT001</code> a <code>CT020</code> de <code>Docs/CASOS_DE_TESTE_FUNCIONAIS.md</code> e as evidências disponíveis no código-fonte do frontend, controller, DTO, serviço, repositório, entidade, tratamento global de exceções e configuração do H2.</p>
+    <main id="conteudo">
+        <section id="visao-geral">
+            <div class="secao-cabecalho">
+                <div>
+                    <h2>Visão geral</h2>
+                    <p>O risco calculado diverge da prioridade original e concentra a atenção em cadastro, atualização, unicidade e exclusão.</p>
+                </div>
+            </div>
 
-<blockquote>
-<p>Esta é uma estimativa heurística de risco, e não uma probabilidade estatística calculada a partir de dados históricos.</p>
-</blockquote>
+            <div class="grade-kpi" aria-label="Indicadores principais">
+                <article class="kpi">
+                    <span class="kpi__rotulo">Casos avaliados</span>
+                    <strong class="kpi__valor" id="kpi-total">20</strong>
+                    <span class="kpi__nota">CT001 a CT020</span>
+                </article>
+                <article class="kpi">
+                    <span class="kpi__rotulo">Risco crítico</span>
+                    <strong class="kpi__valor" id="kpi-criticos">5</strong>
+                    <span class="kpi__nota">Pontuação de 17 a 25</span>
+                </article>
+                <article class="kpi">
+                    <span class="kpi__rotulo">Críticos + altos</span>
+                    <strong class="kpi__valor" id="kpi-prioritarios">14</strong>
+                    <span class="kpi__nota">70% do conjunto, por classificação</span>
+                </article>
+                <article class="kpi">
+                    <span class="kpi__rotulo">Lacunas propostas</span>
+                    <strong class="kpi__valor" id="kpi-lacunas">16</strong>
+                    <span class="kpi__nota">CT021 a CT036</span>
+                </article>
+                <article class="kpi">
+                    <span class="kpi__rotulo">Confiança predominante</span>
+                    <strong class="kpi__valor" id="kpi-confianca">Alta</strong>
+                    <span class="kpi__nota">16 de 20 casos</span>
+                </article>
+            </div>
 
-<p>Não foram fornecidos resultados anteriores de execução, histórico de defeitos, cobertura, complexidade ciclomática, alterações funcionais recentes ou incidentes. Por isso:</p>
-<ul><li>
-<p><code>Probabilidade</code> representa a chance qualitativa de o caso revelar um defeito  do produto, de 1 a 5;</p>
-</li><li>
-<p><code>Impacto</code> representa a consequência funcional, técnica e operacional do  defeito hipotético, de 1 a 5;</p>
-</li><li>
-<p><code>Risco</code> é calculado por <code>Probabilidade × Impacto</code>;</p>
-</li><li>
-<p>a prioridade declarada no documento foi preservada como dado de origem e não  foi usada para forçar a pontuação;</p>
-</li><li>
-<p>a confiança indica a força das evidências estáticas, não a certeza de que  existe um defeito;</p>
-</li><li>
-<p>empates foram ordenados por impacto, probabilidade, centralidade no fluxo e  dependência para os testes seguintes.</p>
-</li></ul>
+            <div class="grade-resumo">
+                <article class="painel">
+                    <div class="painel__topo">
+                        <div>
+                            <h3>Distribuição do risco calculado</h3>
+                            <p>Quantidade de casos por faixa, reconciliada com o ranking.</p>
+                        </div>
+                    </div>
+                    <div class="distribuicao" id="distribuicao-risco" aria-label="Distribuição: 1 baixo, 5 moderados, 9 altos e 5 críticos"></div>
+                    <div class="legenda" aria-label="Legenda de risco">
+                        <span><i class="fundo-baixo"></i>Baixo · 1–4</span>
+                        <span><i class="fundo-moderado"></i>Moderado · 5–9</span>
+                        <span><i class="fundo-alto"></i>Alto · 10–16</span>
+                        <span><i class="fundo-critico"></i>Crítico · 17–25</span>
+                    </div>
+                </article>
 
-<p>As inferências sobre comportamento em execução foram identificadas como tais. O código não foi executado e não há testes automatizados no repositório.</p>
+                <article class="painel">
+                    <div class="painel__topo">
+                        <div>
+                            <h3>Top 5 para ação imediata</h3>
+                            <p>Selecione um caso para consultar a justificativa.</p>
+                        </div>
+                    </div>
+                    <ol class="top-casos" id="top-casos"></ol>
+                </article>
+            </div>
+        </section>
 
-<h2 id="label-2.+Resumo+executivo">2. Resumo executivo<span><a href="#label-2.+Resumo+executivo">&para;</a> <a href="#top">&uarr;</a></span></h2>
+        <section id="matriz-risco">
+            <div class="secao-cabecalho">
+                <div>
+                    <h2>Matriz probabilidade × impacto</h2>
+                    <p>Cada caso aparece na célula que determina sua pontuação. Selecione um identificador para abrir os detalhes.</p>
+                </div>
+            </div>
+            <article class="painel">
+                <div class="matriz-legenda-eixo">Probabilidade de revelar defeito →</div>
+                <div class="matriz-area">
+                    <div class="matriz" id="matriz" aria-label="Matriz de risco com probabilidade nas colunas e impacto nas linhas"></div>
+                </div>
+            </article>
+        </section>
 
-<h3 id="label-2.1+Cinco+casos+com+maior+risco">2.1 Cinco casos com maior risco<span><a href="#label-2.1+Cinco+casos+com+maior+risco">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<div class="table-wrap"><table><thead><tr><th scope="col">Posição</th><th scope="col">Caso</th><th scope="col">Risco</th><th scope="col">Motivo dominante</th></tr></thead><tbody><tr><td>1</td><td>CT004 — cadastro válido completo</td><td>25 — Crítico</td><td>Concentra 12 requisitos e atravessa frontend, API, validação, serviço e banco</td></tr><tr><td>2</td><td>CT011 — atualização válida</td><td>25 — Crítico</td><td>Modifica quase todo o estado persistido e combina unicidade, normalização e preservação de identidade</td></tr><tr><td>3</td><td>CT009 — CPF duplicado no cadastro</td><td>20 — Crítico</td><td>Protege uma chave de negócio central em serviço e banco</td></tr><tr><td>4</td><td>CT010 — e-mail duplicado sem diferenciar caixa</td><td>20 — Crítico</td><td>Combina normalização, consulta case-insensitive e restrição única</td></tr><tr><td>5</td><td>CT014 — exclusão confirmada pela interface</td><td>20 — Crítico</td><td>Executa remoção física irreversível por todas as camadas</td></tr></tbody></table></div>
-<p>O corte dos cinco primeiros não significa que CT013, CT012, CT001 e CT019 sejam dispensáveis. Eles permanecem de risco alto e protegem, respectivamente, unicidade na atualização, autoexclusão das verificações de duplicidade, disponibilidade da listagem e contrato da exclusão.</p>
+        <section id="hotspots">
+            <div class="secao-cabecalho">
+                <div>
+                    <h2>Hotspots funcionais</h2>
+                    <p>Risco médio dos casos associados a cada grupo. Os grupos se sobrepõem e não devem ser somados.</p>
+                </div>
+            </div>
+            <div class="grade-hotspots">
+                <article class="painel">
+                    <div class="painel__topo">
+                        <div>
+                            <h3>Risco médio por grupo</h3>
+                            <p>Escala de 1 a 25, derivada das pontuações dos casos representativos.</p>
+                        </div>
+                    </div>
+                    <div class="barras" id="barras-hotspots"></div>
+                </article>
+                <aside class="chamadas" aria-label="Principais conclusões dos hotspots">
+                    <div class="chamada">
+                        <strong>Maior probabilidade</strong>
+                        <p>Atualização concentra leitura do estado anterior, unicidade, normalização e sobrescrita condicional.</p>
+                    </div>
+                    <div class="chamada chamada--impacto">
+                        <strong>Maior impacto</strong>
+                        <p>Persistência e exclusão podem causar duplicidade, corrupção ou perda física de registros.</p>
+                    </div>
+                    <div class="chamada">
+                        <strong>Foco recomendado</strong>
+                        <p>Executar cadastro → unicidade → atualização → exclusão com pelo menos dois registros.</p>
+                    </div>
+                </aside>
+            </div>
+        </section>
 
-<h3 id="label-2.2+Funcionalidades+mais+propensas+a+revelar+defeitos">2.2 Funcionalidades mais propensas a revelar defeitos<span><a href="#label-2.2+Funcionalidades+mais+propensas+a+revelar+defeitos">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ol><li>
-<p><strong>Atualização:</strong> maior concentração de probabilidade. O fluxo carrega uma  entidade, normaliza CPF e e-mail, ignora o próprio ID nas consultas de  unicidade, altera seis campos e preserva condicionalmente outros dois.</p>
-</li><li>
-<p><strong>Cadastro e validações:</strong> alta combinação de regras, limites, padrões,  normalização, duplicidade e persistência. A validação é duplicada entre  JavaScript e Bean Validation.</p>
-</li><li>
-<p><strong>Consulta/listagem no frontend:</strong> a listagem é assíncrona e alimenta  indicadores, pesquisa, filtros, edição e exclusão a partir de um estado local.</p>
-</li></ol>
+        <section id="execucao">
+            <div class="secao-cabecalho">
+                <div>
+                    <h2>Ordem recomendada de execução</h2>
+                    <p>Sequência orientada por risco e dependências de massa de dados.</p>
+                </div>
+            </div>
+            <div class="raias" id="raias-execucao"></div>
+            <p class="observacao">
+                CT005 é antecipado em P0 para criar o segundo registro necessário aos cenários de duplicidade e atualização.
+                CT020 permanece no fim de P1 porque o reinício da aplicação destrói a massa do H2.
+            </p>
+        </section>
 
-<h3 id="label-2.3+Defeitos+de+maior+impacto">2.3 Defeitos de maior impacto<span><a href="#label-2.3+Defeitos+de+maior+impacto">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p>exclusão do aluno errado ou exclusão sem uma confirmação efetiva;</p>
-</li><li>
-<p>aceitação de CPF ou e-mail já usados por outro aluno;</p>
-</li><li>
-<p>atualização parcial, no registro errado ou com perda de valores anteriores;</p>
-</li><li>
-<p>falha de transação que deixe a interface e o banco em estados divergentes;</p>
-</li><li>
-<p>perda inesperada de registros ou interpretação incorreta da persistência  temporária do H2;</p>
-</li><li>
-<p>criação de aluno com padrões incorretos de matrícula ou situação.</p>
-</li></ul>
+        <section id="ranking">
+            <div class="secao-cabecalho">
+                <div>
+                    <h2>Ranking preditivo completo</h2>
+                    <p>Prioridade original e risco calculado são dimensões independentes.</p>
+                </div>
+                <span class="contador-resultados" id="contador-ranking">20 casos</span>
+            </div>
+            <div class="controles" aria-label="Filtros do ranking">
+                <label class="oculto" for="busca-ranking">Pesquisar caso ou funcionalidade</label>
+                <input class="busca" id="busca-ranking" type="search" placeholder="Pesquisar CT ou funcionalidade">
+                <button class="filtro" type="button" data-filtro="Todos" aria-pressed="true">Todos</button>
+                <button class="filtro" type="button" data-filtro="Crítico" aria-pressed="false">Críticos</button>
+                <button class="filtro" type="button" data-filtro="Alto" aria-pressed="false">Altos</button>
+                <button class="filtro" type="button" data-filtro="Moderado" aria-pressed="false">Moderados</button>
+                <button class="filtro" type="button" data-filtro="Baixo" aria-pressed="false">Baixos</button>
+            </div>
+            <div class="tabela-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Posição</th>
+                            <th scope="col">Caso</th>
+                            <th scope="col">Funcionalidade</th>
+                            <th scope="col">Prioridade original</th>
+                            <th class="numero" scope="col">Prob.</th>
+                            <th class="numero" scope="col">Impacto</th>
+                            <th class="numero" scope="col">Risco</th>
+                            <th scope="col">Classificação</th>
+                            <th scope="col">Confiança</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-ranking"></tbody>
+                </table>
+            </div>
+        </section>
 
-<h3 id="label-2.4+Principais+riscos+para+a+integridade+dos+dados">2.4 Principais riscos para a integridade dos dados<span><a href="#label-2.4+Principais+riscos+para+a+integridade+dos+dados">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Unicidade:</strong> as verificações preventivas do serviço e as restrições do banco  precisam produzir o mesmo resultado, inclusive sob concorrência.</p>
-</li><li>
-<p><strong>Normalização:</strong> o frontend remove máscaras, enquanto o serviço apenas aplica  <code>trim</code> ao CPF e converte o e-mail para minúsculas. Consumidores diretos da API  podem se comportar de forma diferente da interface.</p>
-</li><li>
-<p><strong>Atualização:</strong> valores nulos de <code>dataMatricula</code> e <code>ativo</code> preservam o estado  anterior, enquanto os demais campos são sobrescritos.</p>
-</li><li>
-<p><strong>Exclusão física:</strong> não existe recuperação no domínio depois do <code>DELETE</code>.</p>
-</li><li>
-<p><strong>Persistência efêmera:</strong> <code>jdbc:h2:mem</code> com <code>create-drop</code> elimina os dados ao  final do processo; qualquer expectativa de retenção entre reinícios é  incompatível com a configuração.</p>
-</li></ul>
+        <section id="auditoria">
+            <div class="secao-cabecalho">
+                <div>
+                    <h2>Auditoria da qualidade dos dados</h2>
+                    <p>O resumo e a matriz originais não podem ser usados sem correção.</p>
+                </div>
+            </div>
+            <div class="auditoria-resumo">
+                <div class="mini-kpi">
+                    <strong>8 / 10 / 2</strong>
+                    <span>Prioridades reais: críticas / altas / médias</span>
+                </div>
+                <div class="mini-kpi">
+                    <strong>11 / 9</strong>
+                    <span>Tipos reais: positivos / negativos</span>
+                </div>
+                <div class="mini-kpi">
+                    <strong>14</strong>
+                    <span>Inconsistências documentais registradas</span>
+                </div>
+            </div>
+            <div class="tabela-container">
+                <table class="tabela-auditoria">
+                    <thead>
+                        <tr>
+                            <th scope="col">Inconsistência</th>
+                            <th scope="col">Evidência</th>
+                            <th scope="col">Consequência</th>
+                            <th scope="col">Correção recomendada</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-auditoria"></tbody>
+                </table>
+            </div>
+        </section>
 
-<h3 id="label-2.5+Direcionamento">2.5 Direcionamento<span><a href="#label-2.5+Direcionamento">&para;</a> <a href="#top">&uarr;</a></span></h3>
+        <section id="lacunas">
+            <div class="secao-cabecalho">
+                <div>
+                    <h2>Lacunas preditivas</h2>
+                    <p>Novos casos recomendados; não representam cobertura atual.</p>
+                </div>
+                <span class="contador-resultados">CT021 a CT036</span>
+            </div>
+            <div class="tabela-container">
+                <table class="tabela-lacunas">
+                    <thead>
+                        <tr>
+                            <th scope="col">Novo caso</th>
+                            <th scope="col">Objetivo</th>
+                            <th class="numero" scope="col">Prob.</th>
+                            <th class="numero" scope="col">Impacto</th>
+                            <th class="numero" scope="col">Risco</th>
+                            <th scope="col">Classificação</th>
+                            <th scope="col">Justificativa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-lacunas"></tbody>
+                </table>
+            </div>
+        </section>
 
-<p>A equipe deve concentrar primeiro os testes no encadeamento <strong>cadastro → unicidade → atualização → exclusão</strong>, usando pelo menos dois registros. Em paralelo à execução manual pela interface, deve validar diretamente a API nos pontos que o frontend normaliza ou preenche automaticamente. Em seguida, deve testar tratamento de erros, limites e persistência. Pesquisa, estados vazios e consultas simples podem entrar na regressão posterior.</p>
+        <section id="metodo">
+            <div class="secao-cabecalho">
+                <div>
+                    <h2>Método e limites</h2>
+                    <p>Como interpretar o dashboard sem transformar heurística em estatística.</p>
+                </div>
+            </div>
+            <div class="metodo">
+                <article class="painel">
+                    <h3>Cálculo</h3>
+                    <ul>
+                        <li>Probabilidade qualitativa de 1 a 5.</li>
+                        <li>Impacto funcional, técnico e operacional de 1 a 5.</li>
+                        <li>Risco = probabilidade × impacto.</li>
+                        <li>Baixo 1–4; moderado 5–9; alto 10–16; crítico 17–25.</li>
+                        <li>Empates: impacto, probabilidade, centralidade e dependência.</li>
+                    </ul>
+                </article>
+                <article class="painel">
+                    <h3>Evidências e limitações</h3>
+                    <ul>
+                        <li>20 seções CT recontadas diretamente.</li>
+                        <li>Frontend, API, serviço, repositório, entidade e H2 inspecionados.</li>
+                        <li>Sem histórico de execução, defeitos, cobertura ou incidentes.</li>
+                        <li>Confiança mede a força da evidência estática, não a certeza de defeito.</li>
+                        <li>Inferências de execução precisam de validação em ambiente real.</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+    </main>
 
-<h2 id="label-3.+Auditoria+da+qualidade+e+consist-C3-AAncia+dos+dados">3. Auditoria da qualidade e consistência dos dados<span><a href="#label-3.+Auditoria+da+qualidade+e+consist-C3-AAncia+dos+dados">&para;</a> <a href="#top">&uarr;</a></span></h2>
-
-<h3 id="label-3.1+Recontagem+independente">3.1 Recontagem independente<span><a href="#label-3.1+Recontagem+independente">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<div class="table-wrap"><table><thead><tr><th scope="col">Dimensão</th><th scope="col">Resultado contado nas seções CT001–CT020</th><th scope="col">Valor do resumo</th><th scope="col">Situação</th></tr></thead><tbody><tr><td>Total</td><td>20</td><td>20</td><td>Consistente</td></tr><tr><td>Prioridade crítica</td><td>8</td><td>8</td><td>Consistente</td></tr><tr><td>Prioridade alta</td><td>10</td><td>8</td><td>Inconsistente</td></tr><tr><td>Prioridade média</td><td>2</td><td>4</td><td>Inconsistente</td></tr><tr><td>Tipo positivo</td><td>11</td><td>10</td><td>Inconsistente</td></tr><tr><td>Tipo negativo</td><td>9</td><td>9</td><td>Consistente</td></tr></tbody></table></div>
-<p>As prioridades corretas, conforme os próprios casos, são:</p>
-<ul><li>
-<p>críticas: CT001, CT004, CT007, CT009, CT010, CT011, CT013 e CT014;</p>
-</li><li>
-<p>altas: CT002, CT003, CT005, CT006, CT008, CT012, CT015, CT017, CT018 e CT019;</p>
-</li><li>
-<p>médias: CT016 e CT020.</p>
-</li></ul>
-
-<p>Os 11 casos positivos são CT001, CT002, CT004, CT005, CT011, CT012, CT014, CT016, CT017, CT019 e CT020.</p>
-
-<h3 id="label-3.2+Inconsist-C3-AAncias+encontradas">3.2 Inconsistências encontradas<span><a href="#label-3.2+Inconsist-C3-AAncias+encontradas">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<div class="table-wrap"><table><thead><tr><th scope="col">Inconsistência encontrada</th><th scope="col">Evidência</th><th scope="col">Consequência para a análise</th><th scope="col">Correção recomendada</th></tr></thead><tbody><tr><td>Distribuição de prioridades incorreta</td><td>Seções individuais totalizam 8 críticas, 10 altas e 2 médias; o resumo informa 8/8/4</td><td>Distorce capacidade, ordem e cobertura por severidade declarada</td><td>Alterar o resumo para 8 críticas, 10 altas e 2 médias</td></tr><tr><td>Quantidade de positivos incorreta</td><td>Há 11 casos com <code>Tipo = Positivo</code>; o resumo informa 10</td><td>Compromete análises por partição positiva/negativa</td><td>Alterar o resumo para 11 positivos</td></tr><tr><td>Resumo por funcionalidade não usa as categorias declaradas nos casos e soma 23 ocorrências</td><td>Pelos campos <code>Funcionalidade</code>: Inicialização 2, Listagem 1, Cadastro 7, Atualização 3, Exclusão 3, Pesquisa e filtros 1, Consulta por ID 2 e Persistência 1</td><td>Impede reconciliação e mistura funcionalidade, canal e nível</td><td>Recalcular pelas oito categorias declaradas ou marcar explicitamente categorias sobrepostas</td></tr><tr><td><code>API005</code> associado ao caso errado na matriz</td><td>A matriz aponta CT015; CT015 apenas cancela o diálogo e cobre UI001. CT014 e CT019 declaram API005 e executam <code>DELETE</code></td><td>Produz falsa cobertura do contrato 204 e omite os testes que o verificam</td><td>Substituir CT015 por CT014 e CT019</td></tr><tr><td>Requisitos UI usados, mas ausentes da matriz</td><td>CT002/CT003 declaram UI004; CT016 declara UI005; não há linhas UI004 ou UI005</td><td>Requisitos ficam sem definição e sem rastreabilidade verificável</td><td>Adicionar UI004 e UI005 com descrição, casos e prioridade</td></tr><tr><td>Matriz diverge dos requisitos declarados nos casos</td><td>Exemplos: RF001 omite CT020; RF002 inclui CT003 sem o RF002 estar no caso e omite CT020; RF004 associa CT012/CT013 sem esses IDs constarem nos casos e omite CT020; RF005 associa CT015 e omite CT019/CT020</td><td>Contagens de cobertura e impacto por requisito tornam-se não confiáveis</td><td>Gerar a matriz a partir de uma fonte única e revisar cada relação bidirecional</td></tr><tr><td>Diversas regras são sub-rastreadas</td><td>RN001 omite CT004/CT013; RN002 omite CT004; RN003 omite CT004/CT005/CT011; RN005 omite CT004/CT011; RN007–RN009 omitem CT011; RN010 omite CT004</td><td>Pode ocultar regressões em fluxos que exercitam a mesma regra</td><td>Incluir todos os casos que afirmam cobrir cada regra ou remover a afirmação do caso</td></tr><tr><td><code>API001</code> e <code>API004</code> não são coerentes entre casos e matriz</td><td>API001 inclui CT005 apenas na matriz; API004 inclui CT011/CT012 apenas na matriz, embora não apareça em seus campos de requisitos</td><td>A cobertura do contrato de criação/atualização depende de interpretação externa ao caso</td><td>Harmonizar os IDs nos casos e na matriz</td></tr><tr><td>CT018 espera nomes de campos inexistentes no contrato real</td><td>O caso espera <code>status</code> e <code>path</code>; <code>ErroResposta</code> serializa <code>codigoHttp</code> e <code>caminho</code>, além de <code>dataHora</code> e <code>errosValidacao</code></td><td>Pode gerar falso defeito mesmo com o produto conforme o código e o README</td><td>Corrigir o resultado esperado para <code>dataHora</code>, <code>codigoHttp</code>, <code>erro</code>, <code>mensagem</code>, <code>caminho</code> e <code>errosValidacao</code></td></tr><tr><td>CT005 não consegue omitir os padrões pela interface</td><td><code>abrirCadastro()</code> preenche a data atual e marca <code>ativo</code>; <code>obterDadosFormulario()</code> sempre envia <code>dataMatricula</code> e <code>ativo</code></td><td>O caso não revela defeitos nos ramos de padrão do serviço, embora declare esse objetivo</td><td>Dividir em teste de interface para opcionais e teste direto de API omitindo as duas propriedades</td></tr><tr><td>DT001 é chamado de “CPF válido”, mas a validade é ambígua</td><td><code>12345678901</code> tem 11 dígitos, porém não satisfaz a validação semântica usual; o código valida apenas <code>\d{11}</code></td><td>Pode confundir validade sintática com validade de negócio</td><td>Renomear para “CPF sintaticamente válido” e decidir se dígitos verificadores fazem parte do requisito</td></tr><tr><td>Dados de fronteira catalogados não viraram casos</td><td>DT007 (nome com 101), DT010 (CPF com letras), DT014 (nascimento hoje) e DT015 (matrícula futura) não são usados em casos específicos</td><td>O catálogo dá aparência de cobertura que não existe</td><td>Criar casos dedicados e ligar cada dado à rastreabilidade</td></tr><tr><td>Metadado do commit não corresponde ao HEAD atual</td><td>Documento declara <code>25dfa5d</code>; a revisão atual é <code>87a4272</code></td><td>A reprodução do conjunto completo pode usar uma revisão diferente</td><td>Registrar separadamente commit do código e commit do documento; o diff mostra que os fontes funcionais não mudaram desde <code>25dfa5d</code></td></tr><tr><td>Sobreposição parcial não está identificada</td><td>CT014 valida exclusão pela UI e CT019 valida o contrato 204 da mesma operação</td><td>Pode ser interpretada como duplicidade ou causar execução redundante</td><td>Manter ambos, mas explicitar níveis e reutilizar a mesma preparação de dados</td></tr></tbody></table></div>
-<p>Não foi encontrada duplicidade exata. CT014 e CT019 possuem interseção legítima, mas objetivos e canais distintos.</p>
-
-<h3 id="label-3.3+Matriz+de+rastreabilidade+corrigida+em+n-C3-ADvel+m-C3-ADnimo">3.3 Matriz de rastreabilidade corrigida em nível mínimo<span><a href="#label-3.3+Matriz+de+rastreabilidade+corrigida+em+n-C3-ADvel+m-C3-ADnimo">&para;</a> <a href="#top">&uarr;</a></span></h3>
-
-<p>Esta correção reflete as associações declaradas nas próprias seções dos casos; não cria requisitos novos.</p>
-<div class="table-wrap"><table><thead><tr><th scope="col">Requisito</th><th scope="col">Casos declarados nas seções individuais</th></tr></thead><tbody><tr><td>RF001</td><td>CT004, CT005, CT020</td></tr><tr><td>RF002</td><td>CT001, CT002, CT020</td></tr><tr><td>RF003</td><td>CT017, CT018</td></tr><tr><td>RF004</td><td>CT011, CT020</td></tr><tr><td>RF005</td><td>CT014, CT019, CT020</td></tr><tr><td>RF006</td><td>CT016</td></tr><tr><td>RN001</td><td>CT004, CT005, CT009, CT012, CT013</td></tr><tr><td>RN002</td><td>CT004, CT005, CT010, CT012</td></tr><tr><td>RN003</td><td>CT004, CT006, CT011</td></tr><tr><td>RN004</td><td>CT004, CT007</td></tr><tr><td>RN005</td><td>CT004, CT008, CT011</td></tr><tr><td>RN006</td><td>CT004, CT005</td></tr><tr><td>RN007</td><td>CT004, CT005, CT011</td></tr><tr><td>RN008</td><td>CT004, CT005, CT011</td></tr><tr><td>RN009</td><td>CT004, CT005, CT011</td></tr><tr><td>RN010</td><td>CT004, CT005</td></tr><tr><td>UI001</td><td>CT014, CT015</td></tr><tr><td>UI004</td><td>CT002, CT003</td></tr><tr><td>UI005</td><td>CT016</td></tr><tr><td>API001</td><td>CT004</td></tr><tr><td>API002</td><td>CT001, CT003</td></tr><tr><td>API003</td><td>CT017, CT018</td></tr><tr><td>API004</td><td>Nenhum caso declara explicitamente</td></tr><tr><td>API005</td><td>CT014, CT019</td></tr><tr><td>API006</td><td>CT006, CT007, CT008</td></tr><tr><td>API007</td><td>CT009, CT010, CT013</td></tr><tr><td>API008</td><td>CT018</td></tr></tbody></table></div>
-<p>Inferência: funcionalmente, CT011 e CT012 exercitam <code>PUT</code> e poderiam cobrir API004, mas essa associação deve ser corrigida no catálogo antes de ser tratada como dado. Da mesma forma, CT003 se relaciona ao endpoint de listagem, mas não declara RF002. A tabela acima preserva a fonte em vez de completar relações por suposição.</p>
-
-<h2 id="label-4.+Ranking+preditivo+de+todos+os+casos">4. Ranking preditivo de todos os casos<span><a href="#label-4.+Ranking+preditivo+de+todos+os+casos">&para;</a> <a href="#top">&uarr;</a></span></h2>
-<div class="table-wrap"><table><thead><tr><th scope="col">Posição</th><th scope="col">Caso</th><th scope="col">Funcionalidade</th><th scope="col">Prioridade original</th><th scope="col">Probabilidade</th><th scope="col">Impacto</th><th scope="col">Risco</th><th scope="col">Classificação</th><th scope="col">Confiança</th></tr></thead><tbody><tr><td>1</td><td>CT004</td><td>Cadastro</td><td>Crítica</td><td>5</td><td>5</td><td>25</td><td>Crítico</td><td>Alta</td></tr><tr><td>2</td><td>CT011</td><td>Atualização</td><td>Crítica</td><td>5</td><td>5</td><td>25</td><td>Crítico</td><td>Alta</td></tr><tr><td>3</td><td>CT009</td><td>Cadastro/CPF único</td><td>Crítica</td><td>4</td><td>5</td><td>20</td><td>Crítico</td><td>Alta</td></tr><tr><td>4</td><td>CT010</td><td>Cadastro/e-mail único</td><td>Crítica</td><td>4</td><td>5</td><td>20</td><td>Crítico</td><td>Alta</td></tr><tr><td>5</td><td>CT014</td><td>Exclusão pela interface</td><td>Crítica</td><td>4</td><td>5</td><td>20</td><td>Crítico</td><td>Alta</td></tr><tr><td>6</td><td>CT013</td><td>Atualização/CPF único</td><td>Crítica</td><td>4</td><td>4</td><td>16</td><td>Alto</td><td>Alta</td></tr><tr><td>7</td><td>CT012</td><td>Atualização sem falso conflito</td><td>Alta</td><td>4</td><td>4</td><td>16</td><td>Alto</td><td>Alta</td></tr><tr><td>8</td><td>CT001</td><td>Inicialização/listagem</td><td>Crítica</td><td>4</td><td>4</td><td>16</td><td>Alto</td><td>Alta</td></tr><tr><td>9</td><td>CT019</td><td>Exclusão pela API</td><td>Alta</td><td>3</td><td>5</td><td>15</td><td>Alto</td><td>Alta</td></tr><tr><td>10</td><td>CT007</td><td>Validação de CPF</td><td>Crítica</td><td>3</td><td>4</td><td>12</td><td>Alto</td><td>Alta</td></tr><tr><td>11</td><td>CT005</td><td>Cadastro com opcionais</td><td>Alta</td><td>3</td><td>4</td><td>12</td><td>Alto</td><td>Média</td></tr><tr><td>12</td><td>CT020</td><td>Persistência H2</td><td>Média</td><td>3</td><td>4</td><td>12</td><td>Alto</td><td>Média</td></tr><tr><td>13</td><td>CT016</td><td>Pesquisa e filtros</td><td>Média</td><td>4</td><td>3</td><td>12</td><td>Alto</td><td>Alta</td></tr><tr><td>14</td><td>CT015</td><td>Cancelamento de exclusão</td><td>Alta</td><td>2</td><td>5</td><td>10</td><td>Alto</td><td>Média</td></tr><tr><td>15</td><td>CT003</td><td>Erro ao carregar</td><td>Alta</td><td>3</td><td>3</td><td>9</td><td>Moderado</td><td>Média</td></tr><tr><td>16</td><td>CT006</td><td>Limite mínimo do nome</td><td>Alta</td><td>3</td><td>3</td><td>9</td><td>Moderado</td><td>Alta</td></tr><tr><td>17</td><td>CT008</td><td>Formato de e-mail</td><td>Alta</td><td>3</td><td>3</td><td>9</td><td>Moderado</td><td>Alta</td></tr><tr><td>18</td><td>CT018</td><td>Consulta de ID inexistente</td><td>Alta</td><td>3</td><td>3</td><td>9</td><td>Moderado</td><td>Alta</td></tr><tr><td>19</td><td>CT017</td><td>Consulta de ID existente</td><td>Alta</td><td>2</td><td>3</td><td>6</td><td>Moderado</td><td>Alta</td></tr><tr><td>20</td><td>CT002</td><td>Estado de lista vazia</td><td>Alta</td><td>2</td><td>2</td><td>4</td><td>Baixo</td><td>Alta</td></tr></tbody></table></div>
-<h3 id="label-4.1+Leitura+do+ranking">4.1 Leitura do ranking<span><a href="#label-4.1+Leitura+do+ranking">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p>A prioridade original superestima CT001 e CT007 em relação ao risco  calculado e subestima CT012, CT019 e CT020.</p>
-</li><li>
-<p>CT016, embora tenha prioridade média, recebe risco alto porque combina  normalização, três campos pesquisáveis, filtro de situação, contador e três  estados de renderização em um único caso.</p>
-</li><li>
-<p>CT005 não recebeu probabilidade maior porque a interface sempre envia  <code>dataMatricula</code> e <code>ativo</code>. Assim, o caso atual não alcança os ramos de omissão  que pretende validar.</p>
-</li><li>
-<p>CT018 tem confiança alta quanto à evidência de contrato, mas sua especificação  precisa ser corrigida antes da execução para não registrar um falso positivo.</p>
-</li></ul>
-
-<h2 id="label-5.+Justificativa+dos+casos+cr-C3-ADticos+e+altos">5. Justificativa dos casos críticos e altos<span><a href="#label-5.+Justificativa+dos+casos+cr-C3-ADticos+e+altos">&para;</a> <a href="#top">&uarr;</a></span></h2>
-
-<h3 id="label-CT004+-E2-80-94+Cadastro+completo+-E2-80-94+risco+25">CT004 — Cadastro completo — risco 25<span><a href="#label-CT004+-E2-80-94+Cadastro+completo+-E2-80-94+risco+25">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> uma regra válida em uma camada pode ser transformada  ou rejeitada em outra; o registro pode ser criado com campo incorreto ou a  interface pode não refletir a persistência.</p>
-</li><li>
-<p><strong>Evidência:</strong> <code>salvarAluno()</code> remove máscaras e faz <code>POST</code>;  <code>AlunoRequest</code> valida oito campos; <code>AlunoService.cadastrar()</code> normaliza,  verifica duplicidade, aplica padrões e salva; <code>Aluno</code> impõe nulidade,  comprimentos e unicidade.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> é o caso mais amplo, cobre 12 requisitos e  atravessa todas as camadas com várias transformações.</p>
-</li><li>
-<p><strong>Consequência:</strong> indisponibilidade do cadastro principal ou criação de dados  inválidos/incompletos.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> HTML/JavaScript, controller, DTO, serviço, repositório,  JPA e H2.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> decompor o fluxo em asserções por contrato e confirmar o  registro por <code>GET</code> após o <code>POST</code>, não apenas pela tabela recarregada.</p>
-</li></ul>
-
-<h3 id="label-CT011+-E2-80-94+Atualiza-C3-A7-C3-A3o+v-C3-A1lida+-E2-80-94+risco+25">CT011 — Atualização válida — risco 25<span><a href="#label-CT011+-E2-80-94+Atualiza-C3-A7-C3-A3o+v-C3-A1lida+-E2-80-94+risco+25">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> a edição pode sobrescrever campos errados, perder  valores, alterar a situação incorretamente ou produzir falso conflito.</p>
-</li><li>
-<p><strong>Evidência:</strong> <code>abrirEdicao()</code> preenche oito controles; <code>salvarAluno()</code> usa  <code>PUT</code>; <code>AlunoService.atualizar()</code> busca por ID, normaliza, verifica  duplicidade, altera seis campos e atualiza condicionalmente matrícula e  situação.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> reúne leitura prévia, transformação no  formulário, regras de unicidade e persistência de múltiplas alterações.</p>
-</li><li>
-<p><strong>Consequência:</strong> corrupção do cadastro existente e propagação para  listagem, pesquisa, indicadores e exclusão.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> frontend, API, validação, serviço, repositório e banco.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> comparar fotografia antes/depois, verificar ID imutável  e confirmar individualmente campos alterados e preservados.</p>
-</li></ul>
-
-<h3 id="label-CT009+-E2-80-94+CPF+duplicado+no+cadastro+-E2-80-94+risco+20">CT009 — CPF duplicado no cadastro — risco 20<span><a href="#label-CT009+-E2-80-94+CPF+duplicado+no+cadastro+-E2-80-94+risco+20">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> dois alunos podem compartilhar CPF ou o conflito pode  ser devolvido com código/mensagem inadequados.</p>
-</li><li>
-<p><strong>Evidência:</strong> <code>existsByCpf()</code> no repositório, verificação prévia no serviço,  coluna <code>cpf</code> única e tratamento de <code>RecursoDuplicadoException</code>/restrição do  banco como 409.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> existem duas linhas de defesa com caminhos de  exceção diferentes, sobretudo em gravações concorrentes.</p>
-</li><li>
-<p><strong>Consequência:</strong> quebra de identidade do aluno e ambiguidade em edição e  exclusão.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> serviço, repositório, banco, handler e frontend.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> validar conflito sequencial e complementar com cenário  concorrente controlado, confirmando que somente um registro persiste.</p>
-</li></ul>
-
-<h3 id="label-CT010+-E2-80-94+E-mail+duplicado+case-insensitive+-E2-80-94+risco+20">CT010 — E-mail duplicado case-insensitive — risco 20<span><a href="#label-CT010+-E2-80-94+E-mail+duplicado+case-insensitive+-E2-80-94+risco+20">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> diferenças de caixa ou espaços podem contornar a  unicidade ou gerar resposta inconsistente.</p>
-</li><li>
-<p><strong>Evidência:</strong> <code>normalizarEmail()</code> aplica <code>trim().toLowerCase()</code>;  <code>existsByEmailIgnoreCase()</code> consulta sem diferenciar caixa; a coluna é única.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> a regra depende da composição entre  normalização da aplicação, consulta derivada do Spring Data e collation do  banco.</p>
-</li><li>
-<p><strong>Consequência:</strong> contatos duplicados, associação ambígua e perda de confiança  nos dados.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> frontend/API, serviço, repositório, banco e handler.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> testar caixa, espaços externos e atualização, sempre  consultando a quantidade final de registros.</p>
-</li></ul>
-
-<h3 id="label-CT014+-E2-80-94+Exclus-C3-A3o+confirmada+-E2-80-94+risco+20">CT014 — Exclusão confirmada — risco 20<span><a href="#label-CT014+-E2-80-94+Exclus-C3-A3o+confirmada+-E2-80-94+risco+20">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> o ID em estado local pode não corresponder ao nome  mostrado, a exclusão pode ocorrer antes da confirmação ou a lista pode  permanecer divergente do banco.</p>
-</li><li>
-<p><strong>Evidência:</strong> <code>abrirExclusao()</code> guarda o objeto em  <code>estado.alunoParaExcluir</code>; <code>excluirAluno()</code> envia o ID guardado;  <code>AlunoService.excluir()</code> carrega e remove fisicamente a entidade.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> ação assíncrona e irreversível atravessa estado  local, diálogo, API e persistência.</p>
-</li><li>
-<p><strong>Consequência:</strong> perda definitiva do registro errado ou falsa indicação de  sucesso.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> frontend, controller, serviço, repositório e banco.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> usar dois alunos visualmente distintos, conferir  nome/ID no diálogo e validar por listagem e <code>GET</code> após a confirmação.</p>
-</li></ul>
-
-<h3 id="label-CT013+-E2-80-94+Atualiza-C3-A7-C3-A3o+com+CPF+de+outro+aluno+-E2-80-94+risco+16">CT013 — Atualização com CPF de outro aluno — risco 16<span><a href="#label-CT013+-E2-80-94+Atualiza-C3-A7-C3-A3o+com+CPF+de+outro+aluno+-E2-80-94+risco+16">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> a consulta que ignora o próprio ID pode ignorar o  registro errado ou deixar passar o CPF de terceiro.</p>
-</li><li>
-<p><strong>Evidência:</strong> <code>existsByCpfAndIdNot(cpf, id)</code> e  <code>verificarDuplicidadeNaAtualizacao()</code>.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> predicado composto e dependência de dois  registros são fontes comuns de inversão de condição.</p>
-</li><li>
-<p><strong>Consequência:</strong> se a defesa do banco funcionar, conflito genérico; se não,  quebra de unicidade. O impacto foi limitado a 4 porque a coluna única fornece  proteção complementar.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> serviço, repositório, banco, handler e interface.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> verificar que nenhum campo do segundo aluno mudou depois  do 409 e repetir o cenário para e-mail.</p>
-</li></ul>
-
-<h3 id="label-CT012+-E2-80-94+Atualiza-C3-A7-C3-A3o+mantendo+CPF+e+e-mail+-E2-80-94+risco+16">CT012 — Atualização mantendo CPF e e-mail — risco 16<span><a href="#label-CT012+-E2-80-94+Atualiza-C3-A7-C3-A3o+mantendo+CPF+e+e-mail+-E2-80-94+risco+16">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> o sistema pode comparar o registro consigo mesmo e  bloquear qualquer atualização com falso 409.</p>
-</li><li>
-<p><strong>Evidência:</strong> os métodos <code>existsBy...AndIdNot</code> foram criados especificamente  para excluir o ID atual.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> é o complemento lógico de CT013; um erro no  predicado pode fazer um dos dois cenários passar e o outro falhar.</p>
-</li><li>
-<p><strong>Consequência:</strong> indisponibilidade generalizada da edição, embora os dados  existentes permaneçam íntegros.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> serviço, repositório, handler e frontend.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> manter exatamente CPF/e-mail, alterar um único campo e  validar que não houve normalização destrutiva.</p>
-</li></ul>
-
-<h3 id="label-CT001+-E2-80-94+Inicializa-C3-A7-C3-A3o+e+listagem+-E2-80-94+risco+16">CT001 — Inicialização e listagem — risco 16<span><a href="#label-CT001+-E2-80-94+Inicializa-C3-A7-C3-A3o+e+listagem+-E2-80-94+risco+16">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> a carga assíncrona pode não substituir o estado de  carregamento, não atualizar os resumos ou falhar ao renderizar um item.</p>
-</li><li>
-<p><strong>Evidência:</strong> <code>DOMContentLoaded</code> chama <code>carregarAlunos()</code>, que atualiza  estado, resumo, listagem e texto de atualização; a API mapeia <code>GET   /api/alunos</code>.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> a lista é a origem de pesquisa, edição,  exclusão e três indicadores, ampliando a superfície do caso.</p>
-</li><li>
-<p><strong>Consequência:</strong> a aplicação aparenta indisponibilidade e bloqueia os fluxos  dependentes mesmo com a API saudável.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> frontend, controller, serviço, repositório e API.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> validar lista vazia, lista com múltiplos registros,  ordenação por ID e consistência dos três indicadores.</p>
-</li></ul>
-
-<h3 id="label-CT019+-E2-80-94+DELETE+204+sem+corpo+-E2-80-94+risco+15">CT019 — DELETE 204 sem corpo — risco 15<span><a href="#label-CT019+-E2-80-94+DELETE+204+sem+corpo+-E2-80-94+risco+15">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> a API pode retornar corpo/código incorreto, responder  antes da efetivação ou não remover o registro.</p>
-</li><li>
-<p><strong>Evidência:</strong> controller usa <code>noContent()</code>, serviço busca antes de excluir e  <code>requisitarJson()</code> trata 204 sem tentar desserializar JSON.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> contrato 204 tem tratamento específico no  frontend e efeito persistente separado da resposta.</p>
-</li><li>
-<p><strong>Consequência:</strong> perda ou retenção silenciosa de dados e quebra de clientes  da API.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> controller, serviço, repositório, banco e cliente HTTP.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> verificar cabeçalhos, corpo de zero bytes e 404 em  consulta posterior.</p>
-</li></ul>
-
-<h3 id="label-CT007+-E2-80-94+CPF+com+quantidade+inv-C3-A1lida+-E2-80-94+risco+12">CT007 — CPF com quantidade inválida — risco 12<span><a href="#label-CT007+-E2-80-94+CPF+com+quantidade+inv-C3-A1lida+-E2-80-94+risco+12">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> frontend e backend podem divergir depois da remoção  de máscara, aceitando ou rejeitando comprimentos diferentes.</p>
-</li><li>
-<p><strong>Evidência:</strong> JavaScript testa comprimento 11; Bean Validation usa  <code>\d{11}</code>; a entidade limita a coluna a 11.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> três camadas expressam partes diferentes da  regra; o frontend verifica comprimento, enquanto o backend também exige  somente dígitos.</p>
-</li><li>
-<p><strong>Consequência:</strong> cadastro inválido ou comportamento diferente entre UI e API.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> frontend, DTO, handler e banco.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> executar 10, 11 e 12 dígitos e complementar com letras  diretamente na API.</p>
-</li></ul>
-
-<h3 id="label-CT005+-E2-80-94+Cadastro+com+campos+opcionais+-E2-80-94+risco+12">CT005 — Cadastro com campos opcionais — risco 12<span><a href="#label-CT005+-E2-80-94+Cadastro+com+campos+opcionais+-E2-80-94+risco+12">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> telefone vazio pode não virar <code>null</code>, ou padrões de  matrícula/situação podem ser incorretos quando omitidos pela API.</p>
-</li><li>
-<p><strong>Evidência:</strong> serviço aplica <code>LocalDate.now()</code> e <code>Boolean.TRUE</code>;  <code>normalizarTelefone()</code> converte vazio em <code>null</code>. Porém a UI preenche e envia  matrícula e situação.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> há ramos condicionais e transformação, mas o  desenho atual não alcança toda a hipótese.</p>
-</li><li>
-<p><strong>Consequência:</strong> registros com situação ou data errada e inconsistência entre  clientes da API.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> frontend, serviço e persistência.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> separar o caso em UI e API; no caso de API, remover  completamente as propriedades <code>dataMatricula</code> e <code>ativo</code> do JSON.</p>
-</li></ul>
-
-<h3 id="label-CT020+-E2-80-94+Persist-C3-AAncia+H2+e+reinicializa-C3-A7-C3-A3o+-E2-80-94+risco+12">CT020 — Persistência H2 e reinicialização — risco 12<span><a href="#label-CT020+-E2-80-94+Persist-C3-AAncia+H2+e+reinicializa-C3-A7-C3-A3o+-E2-80-94+risco+12">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> dados podem não estar visíveis durante a mesma  execução ou podem sobreviver a um reinício contra a especificação.</p>
-</li><li>
-<p><strong>Evidência:</strong> URL <code>jdbc:h2:mem:academiadb</code> e  <code>spring.jpa.hibernate.ddl-auto=create-drop</code>.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> o resultado depende do ciclo real do processo,  transações e conexão; não pode ser provado apenas pela configuração.</p>
-</li><li>
-<p><strong>Consequência:</strong> ambiente de teste contaminado ou perda/retensão de dados  contrária ao contrato didático.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> JPA, datasource, H2 e processo da aplicação.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> distinguir recarregar página, reiniciar contexto e  encerrar processo; registrar PID e consultar o banco em cada etapa.</p>
-</li></ul>
-
-<h3 id="label-CT016+-E2-80-94+Pesquisa+e+filtros+combinados+-E2-80-94+risco+12">CT016 — Pesquisa e filtros combinados — risco 12<span><a href="#label-CT016+-E2-80-94+Pesquisa+e+filtros+combinados+-E2-80-94+risco+12">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> normalização, combinação booleana ou contador pode  exibir alunos fora do filtro ou omitir correspondências.</p>
-</li><li>
-<p><strong>Evidência:</strong> <code>renderizarListagem()</code> combina nome/CPF/e-mail com ativo/inativo  e decide entre tabela, vazio e sem resultados.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> um único caso reúne múltiplas condições e estados  do DOM.</p>
-</li><li>
-<p><strong>Consequência:</strong> consulta incorreta sem alterar os dados persistidos.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> estado e renderização no frontend.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> usar tabela de decisão com termo vazio/preenchido,  situação e correspondência por cada campo.</p>
-</li></ul>
-
-<h3 id="label-CT015+-E2-80-94+Cancelamento+da+exclus-C3-A3o+-E2-80-94+risco+10">CT015 — Cancelamento da exclusão — risco 10<span><a href="#label-CT015+-E2-80-94+Cancelamento+da+exclus-C3-A3o+-E2-80-94+risco+10">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>Hipótese de defeito:</strong> fechar por um dos mecanismos pode disparar ou deixar  pronta uma exclusão indevida.</p>
-</li><li>
-<p><strong>Evidência:</strong> exclusão ocorre apenas no evento do botão confirmar; fechar,  cancelar e <code>Esc</code> usam o comportamento do diálogo.</p>
-</li><li>
-<p><strong>Motivo da probabilidade:</strong> o caminho é simples, reduzindo a probabilidade,  mas há três formas de fechar a serem verificadas.</p>
-</li><li>
-<p><strong>Consequência:</strong> uma falha causaria perda física de registro, justificando  impacto 5.</p>
-</li><li>
-<p><strong>Camadas afetadas:</strong> eventos e estado do frontend.</p>
-</li><li>
-<p><strong>Ação preventiva:</strong> executar separadamente botão fechar, cancelar e <code>Esc</code>,  monitorando ausência de <code>DELETE</code>.</p>
-</li></ul>
-
-<h2 id="label-6.+Hotspots+por+funcionalidade+t-C3-A9cnica">6. Hotspots por funcionalidade técnica<span><a href="#label-6.+Hotspots+por+funcionalidade+t-C3-A9cnica">&para;</a> <a href="#top">&uarr;</a></span></h2>
-
-<p>Os grupos abaixo são sobrepostos: um mesmo caso pode contribuir para mais de um hotspot. A avaliação representa concentração qualitativa, não soma independente.</p>
-<div class="table-wrap"><table><thead><tr><th scope="col">Grupo</th><th scope="col">Casos mais representativos</th><th scope="col">Probabilidade concentrada</th><th scope="col">Impacto concentrado</th><th scope="col">Evidência de hotspot</th></tr></thead><tbody><tr><td>Cadastro</td><td>CT004–CT010</td><td>Alta</td><td>Crítico</td><td>Muitas regras, padrões, normalização, unicidade e criação persistente</td></tr><tr><td>Atualização</td><td>CT011–CT013</td><td>Muito alta</td><td>Crítico</td><td>Predicados com exclusão do próprio ID e sobrescrita/preservação de estado</td></tr><tr><td>Exclusão</td><td>CT014, CT015, CT019</td><td>Moderada</td><td>Crítico</td><td>Remoção física, confirmação, estado local e contrato 204</td></tr><tr><td>Consulta e listagem</td><td>CT001–CT003, CT016–CT018</td><td>Moderada</td><td>Alto</td><td>Estado assíncrono compartilhado por indicadores, filtros e ações</td></tr><tr><td>Validações</td><td>CT006–CT010, CT012, CT013</td><td>Alta</td><td>Crítico</td><td>Regras duplicadas, limites e unicidade em camadas diferentes</td></tr><tr><td>API REST</td><td>CT004, CT009–CT014, CT017–CT019</td><td>Alta</td><td>Crítico</td><td>Cinco métodos/contratos e corpos distintos de sucesso e erro</td></tr><tr><td>Persistência</td><td>CT004, CT005, CT009–CT014, CT019, CT020</td><td>Alta</td><td>Crítico</td><td>Restrições únicas, transações, exclusão física e ciclo de vida efêmero</td></tr><tr><td>Tratamento de erros</td><td>CT003, CT006–CT010, CT013, CT018</td><td>Alta</td><td>Alto</td><td>400, 404, 409, 500 e erro de rede seguem caminhos distintos</td></tr></tbody></table></div>
-<p><strong>Maior probabilidade:</strong> atualização, seguida por cadastro/validações.</p>
-
-<p><strong>Maior impacto:</strong> persistência e exclusão, seguidas por unicidade no cadastro e na atualização.</p>
-
-<p>Inferência: atualização ocupa o primeiro hotspot de probabilidade porque cada operação combina mais estados prévios e posteriores do que o cadastro. Essa inferência é baseada na estrutura do código, não em frequência histórica.</p>
-
-<h2 id="label-7.+Ordem+recomendada+de+execu-C3-A7-C3-A3o">7. Ordem recomendada de execução<span><a href="#label-7.+Ordem+recomendada+de+execu-C3-A7-C3-A3o">&para;</a> <a href="#top">&uarr;</a></span></h2>
-
-<h3 id="label-P0+-E2-80-94+Executar+imediatamente">P0 — Executar imediatamente<span><a href="#label-P0+-E2-80-94+Executar+imediatamente">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ol><li>
-<p><strong>CT004</strong> — cria o primeiro registro e valida o caminho principal.</p>
-</li><li>
-<p><strong>CT005 como preparação de segundo registro</strong> — usar dados distintos; para  validar os padrões de fato, complementar com chamada direta sem as  propriedades opcionais.</p>
-</li><li>
-<p><strong>CT009</strong> — tenta repetir o CPF do primeiro registro.</p>
-</li><li>
-<p><strong>CT010</strong> — tenta repetir o e-mail alterando a caixa.</p>
-</li><li>
-<p><strong>CT011</strong> — atualiza um registro e confirma o estado persistido.</p>
-</li><li>
-<p><strong>CT014</strong> — exclui pela interface e valida lista/indicadores.</p>
-</li></ol>
-
-<p>CT005 é antecipado por dependência de massa, não por superar o risco dos casos seguintes.</p>
-
-<h3 id="label-P1+-E2-80-94+Executar+antes+da+libera-C3-A7-C3-A3o">P1 — Executar antes da liberação<span><a href="#label-P1+-E2-80-94+Executar+antes+da+libera-C3-A7-C3-A3o">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ol><li>
-<p><strong>CT001</strong> — confirma que a listagem e os resumos suportam os demais fluxos.</p>
-</li><li>
-<p><strong>CT012</strong> — garante que o próprio CPF/e-mail não bloqueiam a atualização.</p>
-</li><li>
-<p><strong>CT013</strong> — usa os dois registros para validar CPF de terceiro.</p>
-</li><li>
-<p><strong>CT007</strong> — cobre a regra estrutural do identificador.</p>
-</li><li>
-<p><strong>CT019</strong> — valida o contrato de exclusão diretamente na API.</p>
-</li><li>
-<p><strong>CT015</strong> — confirma ausência de efeito nos três cancelamentos.</p>
-</li><li>
-<p><strong>CT016</strong> — valida pesquisa, filtro e contador sobre a massa remanescente.</p>
-</li><li>
-<p><strong>CT020</strong> — deve ser o último do ciclo, pois reiniciar a aplicação destrói a  massa de dados.</p>
-</li></ol>
-
-<h3 id="label-P2+-E2-80-94+Executar+na+regress-C3-A3o">P2 — Executar na regressão<span><a href="#label-P2+-E2-80-94+Executar+na+regress-C3-A3o">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ol><li>
-<p><strong>CT006</strong> — limite mínimo do nome.</p>
-</li><li>
-<p><strong>CT008</strong> — formato inválido de e-mail.</p>
-</li><li>
-<p><strong>CT018</strong>, após corrigir os nomes dos campos esperados — contrato 404.</p>
-</li><li>
-<p><strong>CT003</strong> — indisponibilidade e nova tentativa de listagem.</p>
-</li><li>
-<p><strong>CT017</strong> — contrato positivo de consulta por ID.</p>
-</li></ol>
-
-<h3 id="label-P3+-E2-80-94+Executar+quando+houver+tempo+dispon-C3-ADvel">P3 — Executar quando houver tempo disponível<span><a href="#label-P3+-E2-80-94+Executar+quando+houver+tempo+dispon-C3-ADvel">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ol><li>
-<p><strong>CT002</strong> — estado visual para banco vazio.</p>
-</li></ol>
-
-<p>P3 não significa ausência de valor. O caso é simples, tem baixo impacto sobre integridade e pode ser observado naturalmente após CT020.</p>
-
-<h2 id="label-8.+Lacunas+preditivas+e+novos+casos+recomendados">8. Lacunas preditivas e novos casos recomendados<span><a href="#label-8.+Lacunas+preditivas+e+novos+casos+recomendados">&para;</a> <a href="#top">&uarr;</a></span></h2>
-
-<p>Os identificadores abaixo continuam a sequência existente. Eles são propostas e não devem ser considerados cobertura atual.</p>
-<div class="table-wrap"><table><thead><tr><th scope="col">Novo caso</th><th scope="col">Objetivo</th><th scope="col">Probabilidade</th><th scope="col">Impacto</th><th scope="col">Risco</th><th scope="col">Justificativa</th></tr></thead><tbody><tr><td>CT021</td><td>Submeter CPF com 11 dígitos, mas semanticamente inválido</td><td>5</td><td>4</td><td>20 — Crítico</td><td>O código aceita qualquer <code>\d{11}</code>; é necessária decisão explícita de requisito para evitar identidades fictícias</td></tr><tr><td>CT022</td><td>Atualizar aluno usando e-mail de outro aluno, inclusive com caixa diferente</td><td>4</td><td>5</td><td>20 — Crítico</td><td>O caso simétrico de CPF existe, mas a consulta <code>existsByEmailIgnoreCaseAndIdNot</code> não tem caso negativo dedicado</td></tr><tr><td>CT023</td><td>Omitir <code>dataMatricula</code> e <code>ativo</code> em POST direto</td><td>4</td><td>4</td><td>16 — Alto</td><td>CT005 não alcança esses ramos pela UI; o serviço deve aplicar hoje e <code>true</code></td></tr><tr><td>CT024</td><td>Enviar nascimento igual a hoje e nascimento futuro</td><td>4</td><td>4</td><td>16 — Alto</td><td><code>@Past</code> e a comparação do JavaScript usam fronteira estrita; DT014 existe, mas não é exercido</td></tr><tr><td>CT025</td><td>Enviar matrícula futura e confirmar ausência de persistência</td><td>4</td><td>4</td><td>16 — Alto</td><td>DT015 existe sem caso; frontend e <code>@PastOrPresent</code> precisam concordar</td></tr><tr><td>CT026</td><td>Forçar erro de persistência durante cadastro/atualização e validar rollback</td><td>3</td><td>5</td><td>15 — Alto</td><td>Transações são declaradas, mas não há evidência de recuperação nem consistência após falha</td></tr><tr><td>CT027</td><td>Enviar o mesmo cadastro de CPF/e-mail concorrentemente</td><td>3</td><td>5</td><td>15 — Alto</td><td>A checagem prévia tem janela de corrida; a restrição única e o handler devem garantir um único registro e 409</td></tr><tr><td>CT028</td><td>Chamar API diretamente com valores que o frontend normaliza</td><td>4</td><td>4</td><td>16 — Alto</td><td>CPF com máscara não é removido pelo serviço; e-mail recebe <code>trim/lowercase</code>; há risco de divergência entre clientes</td></tr><tr><td>CT029</td><td>Enviar telefone com 9, 10, 11, 12 dígitos e caracteres</td><td>4</td><td>3</td><td>12 — Alto</td><td>RN006 só aparece incidentalmente em CT004/CT005 e não possui fronteiras próprias</td></tr><tr><td>CT030</td><td>Enviar plano ausente e plano desconhecido</td><td>3</td><td>4</td><td>12 — Alto</td><td><code>null</code> segue Bean Validation; enum inválido segue <code>HttpMessageNotReadableException</code>, caminhos diferentes sem cobertura</td></tr><tr><td>CT031</td><td>Enviar JSON malformado, data fora do ISO e tipos incompatíveis</td><td>4</td><td>3</td><td>12 — Alto</td><td>O handler possui caminho específico ainda não testado e mensagem agregada para diferentes causas</td></tr><tr><td>CT032</td><td>Excluir ID inexistente</td><td>3</td><td>4</td><td>12 — Alto</td><td>Busca e exclusão compartilham a exceção 404, mas apenas GET inexistente está coberto</td></tr><tr><td>CT033</td><td>Enviar nome com 3, 100 e 101 caracteres</td><td>3</td><td>3</td><td>9 — Moderado</td><td>Só o limite inferior inválido é testado; DT007 já prevê 101 caracteres</td></tr><tr><td>CT034</td><td>Enviar CPF com letras diretamente à API</td><td>3</td><td>4</td><td>12 — Alto</td><td>O frontend remove caracteres, portanto o padrão <code>\d{11}</code> só é isolado por cliente direto; DT010 não é usado</td></tr><tr><td>CT035</td><td>Simular 500 e resposta não JSON em salvar/excluir/listar</td><td>3</td><td>4</td><td>12 — Alto</td><td>O frontend depende de <code>content-type</code> e de mensagens alternativas; o handler genérico 500 não tem caso</td></tr><tr><td>CT036</td><td>Repetir edição/exclusão após a lista local ficar desatualizada</td><td>3</td><td>5</td><td>15 — Alto</td><td>O frontend guarda objetos e IDs em memória; remoção concorrente pode gerar 404 após o diálogo abrir</td></tr></tbody></table></div>
-<h3 id="label-8.1+Observa-C3-A7-C3-B5es+sobre+as+lacunas">8.1 Observações sobre as lacunas<span><a href="#label-8.1+Observa-C3-A7-C3-B5es+sobre+as+lacunas">&para;</a> <a href="#top">&uarr;</a></span></h3>
-<ul><li>
-<p><strong>CPF semântico:</strong> atualmente a ausência de validação é uma limitação  declarada, portanto CT021 é primeiro um teste de caracterização e uma decisão  de requisito. Só deve esperar rejeição depois que a regra for aprovada.</p>
-</li><li>
-<p><strong>Plano inexistente, JSON malformado e datas inválidas:</strong> estão dentro do  contrato funcional de erro já implementado pelo handler; não exigem ampliar o  escopo para segurança.</p>
-</li><li>
-<p><strong>Falhas de persistência:</strong> exigem ambiente controlável, mas continuam sendo  testes funcionais de atomicidade e recuperação, não testes de desempenho.</p>
-</li><li>
-<p><strong>Divergência frontend/backend:</strong> os casos devem comparar respostas da UI e da  API para a mesma classe de entrada, sem pressupor que a máscara será aceita  pelo backend.</p>
-</li></ul>
-
-<h2 id="label-9.+Conclus-C3-A3o">9. Conclusão<span><a href="#label-9.+Conclus-C3-A3o">&para;</a> <a href="#top">&uarr;</a></span></h2>
-
-<p>O conjunto atual cobre o caminho nominal do CRUD, mas a qualidade dos metadados não permite usar o resumo e a matriz sem correção. O maior risco não está na quantidade de casos declarados como críticos, e sim na combinação de:</p>
-<ol><li>
-<p>atualização de estado existente;</p>
-</li><li>
-<p>unicidade e normalização de CPF/e-mail;</p>
-</li><li>
-<p>exclusão física;</p>
-</li><li>
-<p>persistência e transações;</p>
-</li><li>
-<p>diferenças entre o que a interface envia e o que a API aceita.</p>
-</li></ol>
-
-<p>Antes de uma decisão de liberação, a equipe deve corrigir a rastreabilidade, separar o teste de padrões do backend do CT005, ajustar o contrato do CT018 e executar P0/P1 com confirmação direta no banco ou por consultas subsequentes. Sem histórico de execução, qualquer evolução para “probabilidade estatística” exigirá registrar, por caso e versão, resultados, defeitos encontrados, severidade, área alterada e recorrência.</p>
-
-    <footer>
-      Documento gerado a partir de ANALISE_PREDITIVA_CASOS_DE_TESTE.md.
+    <footer class="rodape">
+        Academia Alunos · Dashboard gerado a partir da análise técnica auditável em Markdown.
     </footer>
-  </main>
+
+    <dialog id="dialogo-caso" aria-labelledby="dialogo-titulo">
+        <div class="dialogo__cabecalho">
+            <div>
+                <p id="dialogo-sobrelinha">Detalhe do caso</p>
+                <h2 id="dialogo-titulo">Caso de teste</h2>
+            </div>
+            <button class="dialogo__fechar" id="fechar-dialogo" type="button" aria-label="Fechar detalhes">×</button>
+        </div>
+        <div class="dialogo__corpo">
+            <div class="dialogo__metricas" id="dialogo-metricas"></div>
+            <dl class="detalhes" id="dialogo-detalhes"></dl>
+        </div>
+    </dialog>
+
+    <script>
+        "use strict";
+
+        const casos = [
+            {
+                posicao: 1, id: "CT004", titulo: "Cadastrar aluno com todos os dados válidos",
+                funcionalidade: "Cadastro", prioridade: "Crítica", probabilidade: 5, impacto: 5,
+                risco: 25, classificacao: "Crítico", confianca: "Alta",
+                hipotese: "Uma regra válida em uma camada pode ser transformada ou rejeitada em outra; o registro pode ser criado com campo incorreto ou a interface pode divergir da persistência.",
+                evidencia: "salvarAluno() remove máscaras e envia POST; AlunoRequest valida oito campos; AlunoService normaliza, verifica duplicidade, aplica padrões e salva; a entidade reforça nulidade, tamanhos e unicidade.",
+                motivo: "É o caso mais amplo: cobre 12 requisitos e atravessa todas as camadas com várias transformações.",
+                consequencia: "Indisponibilidade do cadastro principal ou criação de dados inválidos e incompletos.",
+                camadas: "HTML/JavaScript, controller, DTO, serviço, repositório, JPA e H2.",
+                acao: "Decompor o fluxo em asserções por contrato e confirmar o registro por GET após o POST."
+            },
+            {
+                posicao: 2, id: "CT011", titulo: "Atualizar aluno existente com campos válidos",
+                funcionalidade: "Atualização", prioridade: "Crítica", probabilidade: 5, impacto: 5,
+                risco: 25, classificacao: "Crítico", confianca: "Alta",
+                hipotese: "A edição pode sobrescrever campos errados, perder valores, alterar a situação incorretamente ou produzir falso conflito.",
+                evidencia: "abrirEdicao() preenche oito controles; salvarAluno() usa PUT; AlunoService.atualizar() busca por ID, normaliza, verifica duplicidade e atualiza campos obrigatórios e condicionais.",
+                motivo: "Reúne leitura prévia, transformação no formulário, regras de unicidade e persistência de múltiplas alterações.",
+                consequencia: "Corrupção de cadastro existente com propagação para listagem, pesquisa, indicadores e exclusão.",
+                camadas: "Frontend, API, validação, serviço, repositório e banco.",
+                acao: "Comparar fotografia antes/depois, verificar ID imutável e confirmar campos alterados e preservados."
+            },
+            {
+                posicao: 3, id: "CT009", titulo: "Cadastrar aluno com CPF duplicado",
+                funcionalidade: "Cadastro / CPF único", prioridade: "Crítica", probabilidade: 4, impacto: 5,
+                risco: 20, classificacao: "Crítico", confianca: "Alta",
+                hipotese: "Dois alunos podem compartilhar CPF ou o conflito pode ser devolvido com código e mensagem inadequados.",
+                evidencia: "existsByCpf(), verificação preventiva no serviço, coluna CPF única e handlers de conflito retornando 409.",
+                motivo: "Há duas linhas de defesa com caminhos de exceção diferentes, especialmente sob concorrência.",
+                consequencia: "Quebra de identidade do aluno e ambiguidade em edição e exclusão.",
+                camadas: "Serviço, repositório, banco, handler e frontend.",
+                acao: "Validar conflito sequencial e concorrente, confirmando que somente um registro persiste."
+            },
+            {
+                posicao: 4, id: "CT010", titulo: "Cadastrar aluno com e-mail duplicado sem diferenciar caixa",
+                funcionalidade: "Cadastro / e-mail único", prioridade: "Crítica", probabilidade: 4, impacto: 5,
+                risco: 20, classificacao: "Crítico", confianca: "Alta",
+                hipotese: "Diferenças de caixa ou espaços podem contornar a unicidade ou gerar resposta inconsistente.",
+                evidencia: "normalizarEmail() aplica trim e lowercase; existsByEmailIgnoreCase() consulta sem diferenciar caixa; a coluna é única.",
+                motivo: "A regra depende da composição entre normalização, consulta derivada e comportamento do banco.",
+                consequencia: "Contatos duplicados, associação ambígua e perda de confiança nos dados.",
+                camadas: "Frontend/API, serviço, repositório, banco e handler.",
+                acao: "Testar caixa, espaços externos e atualização, conferindo a quantidade final de registros."
+            },
+            {
+                posicao: 5, id: "CT014", titulo: "Excluir aluno com confirmação explícita",
+                funcionalidade: "Exclusão pela interface", prioridade: "Crítica", probabilidade: 4, impacto: 5,
+                risco: 20, classificacao: "Crítico", confianca: "Alta",
+                hipotese: "O ID guardado pode não corresponder ao nome mostrado, a exclusão pode ocorrer antes da confirmação ou a lista pode divergir do banco.",
+                evidencia: "abrirExclusao() guarda o objeto; excluirAluno() envia seu ID; AlunoService.excluir() carrega e remove fisicamente a entidade.",
+                motivo: "Ação assíncrona e irreversível atravessa estado local, diálogo, API e persistência.",
+                consequencia: "Perda definitiva do registro errado ou falsa indicação de sucesso.",
+                camadas: "Frontend, controller, serviço, repositório e banco.",
+                acao: "Usar dois alunos distintos, conferir nome/ID no diálogo e validar por lista e GET após excluir."
+            },
+            {
+                posicao: 6, id: "CT013", titulo: "Atualizar aluno com CPF de outro aluno",
+                funcionalidade: "Atualização / CPF único", prioridade: "Crítica", probabilidade: 4, impacto: 4,
+                risco: 16, classificacao: "Alto", confianca: "Alta",
+                hipotese: "A consulta que ignora o próprio ID pode ignorar o registro errado ou aceitar o CPF de terceiro.",
+                evidencia: "existsByCpfAndIdNot(cpf, id) e verificarDuplicidadeNaAtualizacao().",
+                motivo: "Predicado composto e dependência de dois registros favorecem inversões lógicas.",
+                consequencia: "Conflito genérico pela defesa do banco ou quebra de unicidade se a proteção falhar.",
+                camadas: "Serviço, repositório, banco, handler e interface.",
+                acao: "Verificar que nenhum campo mudou após o 409 e repetir o cenário para e-mail."
+            },
+            {
+                posicao: 7, id: "CT012", titulo: "Atualizar mantendo o mesmo CPF e e-mail",
+                funcionalidade: "Atualização sem falso conflito", prioridade: "Alta", probabilidade: 4, impacto: 4,
+                risco: 16, classificacao: "Alto", confianca: "Alta",
+                hipotese: "O sistema pode comparar o registro consigo mesmo e bloquear qualquer atualização com falso 409.",
+                evidencia: "Métodos existsBy...AndIdNot foram criados para excluir o ID atual.",
+                motivo: "É o complemento lógico de CT013; um erro no predicado pode quebrar um dos dois cenários.",
+                consequencia: "Indisponibilidade generalizada da edição, mantendo os dados existentes íntegros.",
+                camadas: "Serviço, repositório, handler e frontend.",
+                acao: "Manter CPF/e-mail, alterar só um campo e validar ausência de normalização destrutiva."
+            },
+            {
+                posicao: 8, id: "CT001", titulo: "Carregar página inicial e listar alunos",
+                funcionalidade: "Inicialização / listagem", prioridade: "Crítica", probabilidade: 4, impacto: 4,
+                risco: 16, classificacao: "Alto", confianca: "Alta",
+                hipotese: "A carga assíncrona pode não substituir o estado de carregamento, atualizar resumos ou renderizar itens.",
+                evidencia: "DOMContentLoaded chama carregarAlunos(), que atualiza estado, resumo e listagem; a API mapeia GET /api/alunos.",
+                motivo: "A lista origina pesquisa, edição, exclusão e três indicadores.",
+                consequencia: "A aplicação aparenta indisponibilidade e bloqueia fluxos dependentes mesmo com API saudável.",
+                camadas: "Frontend, controller, serviço, repositório e API.",
+                acao: "Validar vazio, múltiplos registros, ordem por ID e consistência dos indicadores."
+            },
+            {
+                posicao: 9, id: "CT019", titulo: "API DELETE retorna 204 e corpo vazio",
+                funcionalidade: "Exclusão pela API", prioridade: "Alta", probabilidade: 3, impacto: 5,
+                risco: 15, classificacao: "Alto", confianca: "Alta",
+                hipotese: "A API pode retornar corpo/código incorreto, responder antes da efetivação ou não remover o registro.",
+                evidencia: "Controller usa noContent(), serviço busca antes de excluir e requisitarJson() trata 204 sem desserializar JSON.",
+                motivo: "O contrato 204 tem tratamento específico e efeito persistente separado da resposta.",
+                consequencia: "Perda ou retenção silenciosa de dados e quebra de clientes da API.",
+                camadas: "Controller, serviço, repositório, banco e cliente HTTP.",
+                acao: "Verificar cabeçalhos, corpo de zero bytes e 404 em consulta posterior."
+            },
+            {
+                posicao: 10, id: "CT007", titulo: "Validar CPF com número de dígitos inválido",
+                funcionalidade: "Validação de CPF", prioridade: "Crítica", probabilidade: 3, impacto: 4,
+                risco: 12, classificacao: "Alto", confianca: "Alta",
+                hipotese: "Frontend e backend podem divergir depois da remoção de máscara.",
+                evidencia: "JavaScript testa comprimento 11; Bean Validation usa expressão de 11 dígitos; entidade limita a coluna.",
+                motivo: "Três camadas expressam partes diferentes da regra.",
+                consequencia: "Cadastro inválido ou comportamento diferente entre UI e API.",
+                camadas: "Frontend, DTO, handler e banco.",
+                acao: "Executar 10, 11 e 12 dígitos e complementar com letras pela API."
+            },
+            {
+                posicao: 11, id: "CT005", titulo: "Cadastrar aluno omitindo campos opcionais",
+                funcionalidade: "Cadastro com opcionais", prioridade: "Alta", probabilidade: 3, impacto: 4,
+                risco: 12, classificacao: "Alto", confianca: "Média",
+                hipotese: "Telefone vazio pode não virar nulo ou padrões de matrícula/situação podem ser incorretos.",
+                evidencia: "Serviço aplica hoje e true; normalizarTelefone() converte vazio em nulo. A UI, porém, preenche e envia matrícula e situação.",
+                motivo: "Há ramos condicionais, mas o desenho atual não alcança toda a hipótese.",
+                consequencia: "Registros com situação/data errada e inconsistência entre clientes.",
+                camadas: "Frontend, serviço e persistência.",
+                acao: "Separar UI e API; no POST direto, remover completamente dataMatricula e ativo."
+            },
+            {
+                posicao: 12, id: "CT020", titulo: "Persistência em H2 e reinicialização do banco",
+                funcionalidade: "Persistência H2", prioridade: "Média", probabilidade: 3, impacto: 4,
+                risco: 12, classificacao: "Alto", confianca: "Média",
+                hipotese: "Dados podem não ficar visíveis durante a execução ou sobreviver contra a especificação.",
+                evidencia: "jdbc:h2:mem:academiadb e spring.jpa.hibernate.ddl-auto=create-drop.",
+                motivo: "O resultado depende do ciclo do processo, transações e conexão.",
+                consequencia: "Ambiente contaminado ou retenção/perda contrária ao contrato.",
+                camadas: "JPA, datasource, H2 e processo da aplicação.",
+                acao: "Distinguir recarga da página, reinício do contexto e encerramento do processo."
+            },
+            {
+                posicao: 13, id: "CT016", titulo: "Pesquisar e filtrar alunos combinados",
+                funcionalidade: "Pesquisa e filtros", prioridade: "Média", probabilidade: 4, impacto: 3,
+                risco: 12, classificacao: "Alto", confianca: "Alta",
+                hipotese: "Normalização, combinação booleana ou contador pode exibir alunos indevidos ou omitir correspondências.",
+                evidencia: "renderizarListagem() combina nome, CPF e e-mail com ativo/inativo e três estados do DOM.",
+                motivo: "Um caso reúne múltiplas condições de busca e apresentação.",
+                consequencia: "Consulta incorreta sem alterar dados persistidos.",
+                camadas: "Estado e renderização no frontend.",
+                acao: "Usar tabela de decisão com termo, situação e correspondência por cada campo."
+            },
+            {
+                posicao: 14, id: "CT015", titulo: "Cancelar exclusão no diálogo",
+                funcionalidade: "Cancelamento de exclusão", prioridade: "Alta", probabilidade: 2, impacto: 5,
+                risco: 10, classificacao: "Alto", confianca: "Média",
+                hipotese: "Fechar por um dos mecanismos pode disparar ou deixar preparada uma exclusão indevida.",
+                evidencia: "Exclusão ocorre no botão confirmar; fechar, cancelar e Esc seguem caminhos próprios do diálogo.",
+                motivo: "O fluxo é simples, mas possui três formas de fechamento.",
+                consequencia: "Uma falha causaria perda física do registro.",
+                camadas: "Eventos e estado do frontend.",
+                acao: "Executar fechar, cancelar e Esc separadamente, monitorando ausência de DELETE."
+            },
+            { posicao: 15, id: "CT003", titulo: "Exibir erro de carregamento quando a API falha", funcionalidade: "Erro ao carregar", prioridade: "Alta", probabilidade: 3, impacto: 3, risco: 9, classificacao: "Moderado", confianca: "Média" },
+            { posicao: 16, id: "CT006", titulo: "Validar nome com menos de 3 caracteres", funcionalidade: "Limite mínimo do nome", prioridade: "Alta", probabilidade: 3, impacto: 3, risco: 9, classificacao: "Moderado", confianca: "Alta" },
+            { posicao: 17, id: "CT008", titulo: "Validar e-mail inválido", funcionalidade: "Formato de e-mail", prioridade: "Alta", probabilidade: 3, impacto: 3, risco: 9, classificacao: "Moderado", confianca: "Alta" },
+            { posicao: 18, id: "CT018", titulo: "Consultar aluno inexistente por ID", funcionalidade: "Consulta de ID inexistente", prioridade: "Alta", probabilidade: 3, impacto: 3, risco: 9, classificacao: "Moderado", confianca: "Alta" },
+            { posicao: 19, id: "CT017", titulo: "Consultar aluno existente por ID", funcionalidade: "Consulta de ID existente", prioridade: "Alta", probabilidade: 2, impacto: 3, risco: 6, classificacao: "Moderado", confianca: "Alta" },
+            { posicao: 20, id: "CT002", titulo: "Exibir estado inicial sem alunos cadastrados", funcionalidade: "Estado de lista vazia", prioridade: "Alta", probabilidade: 2, impacto: 2, risco: 4, classificacao: "Baixo", confianca: "Alta" }
+        ];
+
+        const hotspots = [
+            { nome: "Atualização", valor: 19.0 },
+            { nome: "Persistência", valor: 18.1 },
+            { nome: "API REST", valor: 17.2 },
+            { nome: "Cadastro", valor: 15.3 },
+            { nome: "Exclusão", valor: 15.0 },
+            { nome: "Validações", valor: 14.6 },
+            { nome: "Tratamento de erros", valor: 13.0 },
+            { nome: "Consulta e listagem", valor: 9.3 }
+        ];
+
+        const execucao = [
+            {
+                id: "P0", titulo: "Executar imediatamente", classe: "raia--p0",
+                casos: [
+                    ["CT004", "Criar o primeiro registro e validar o caminho principal."],
+                    ["CT005", "Criar o segundo registro; complementar padrões pela API."],
+                    ["CT009", "Repetir o CPF do primeiro registro."],
+                    ["CT010", "Repetir o e-mail alterando a caixa."],
+                    ["CT011", "Atualizar e confirmar o estado persistido."],
+                    ["CT014", "Excluir pela interface e validar lista e indicadores."]
+                ]
+            },
+            {
+                id: "P1", titulo: "Antes da liberação", classe: "raia--p1",
+                casos: [
+                    ["CT001", "Confirmar listagem e indicadores."],
+                    ["CT012", "Evitar falso conflito com o próprio registro."],
+                    ["CT013", "Validar CPF pertencente a terceiro."],
+                    ["CT007", "Cobrir a estrutura do CPF."],
+                    ["CT019", "Validar DELETE 204 diretamente."],
+                    ["CT015", "Confirmar ausência de efeito ao cancelar."],
+                    ["CT016", "Validar busca, filtro e contador."],
+                    ["CT020", "Reiniciar por último; o H2 perde a massa."]
+                ]
+            },
+            {
+                id: "P2", titulo: "Regressão", classe: "raia--p2",
+                casos: [
+                    ["CT006", "Limite mínimo do nome."],
+                    ["CT008", "Formato inválido de e-mail."],
+                    ["CT018", "Contrato 404 após corrigir os campos esperados."],
+                    ["CT003", "Indisponibilidade e nova tentativa."],
+                    ["CT017", "Consulta positiva por ID."]
+                ]
+            },
+            {
+                id: "P3", titulo: "Quando houver tempo", classe: "raia--p3",
+                casos: [
+                    ["CT002", "Estado visual de banco vazio; baixo impacto na integridade."]
+                ]
+            }
+        ];
+
+        const auditoria = [
+            ["Distribuição de prioridades incorreta", "Casos individuais: 8 críticas, 10 altas e 2 médias; resumo: 8/8/4.", "Distorce capacidade, ordem e cobertura declarada.", "Corrigir o resumo para 8/10/2."],
+            ["Quantidade de positivos incorreta", "Há 11 casos positivos; o resumo informa 10.", "Compromete a análise por tipo de fluxo.", "Corrigir o resumo para 11 positivos."],
+            ["Resumo por funcionalidade soma 23", "Os campos individuais formam oito categorias e totalizam 20.", "Mistura funcionalidade, canal e nível.", "Recalcular pelas categorias dos casos ou marcar sobreposição."],
+            ["API005 associado ao caso errado", "Matriz aponta CT015; CT014 e CT019 executam DELETE.", "Falsa cobertura do contrato 204.", "Substituir CT015 por CT014 e CT019."],
+            ["UI004 e UI005 ausentes da matriz", "CT002/CT003 usam UI004 e CT016 usa UI005.", "Requisitos ficam sem definição rastreável.", "Adicionar as duas linhas à matriz."],
+            ["Matriz diverge dos casos", "RF001, RF002, RF004 e RF005 têm inclusões e omissões.", "Cobertura por requisito não é confiável.", "Gerar matriz a partir de fonte única."],
+            ["Regras sub-rastreadas", "RN001–RN010 omitem casos que declaram essas regras.", "Pode ocultar regressões em fluxos compartilhados.", "Reconciliar relações bidirecionais."],
+            ["API001 e API004 incoerentes", "Associações aparecem só na matriz ou só nos casos.", "Contrato de criação/edição fica ambíguo.", "Harmonizar IDs nos dois locais."],
+            ["Contrato esperado de CT018 incorreto", "Caso espera status/path; código usa codigoHttp/caminho.", "Gera falso defeito em produto conforme.", "Corrigir nomes e incluir os demais campos reais."],
+            ["CT005 não omite padrões pela UI", "A interface sempre envia dataMatricula e ativo.", "Não alcança os ramos que pretende testar.", "Dividir em caso de UI e POST direto."],
+            ["DT001 chama CPF inválido de válido", "12345678901 passa na sintaxe, não na validação semântica usual.", "Confunde validade sintática e de negócio.", "Renomear e decidir o requisito semântico."],
+            ["Dados de fronteira sem casos", "DT007, DT010, DT014 e DT015 não são usados.", "O catálogo aparenta cobertura inexistente.", "Criar casos dedicados."],
+            ["Commit documentado difere do HEAD", "Documento cita 25dfa5d; revisão analisada estava em 87a4272.", "Reprodutibilidade do conjunto fica ambígua.", "Separar commit do código e do documento."],
+            ["Sobreposição parcial não identificada", "CT014 e CT019 cobrem níveis distintos da exclusão.", "Pode parecer duplicidade ou gerar repetição.", "Manter ambos e compartilhar preparação."]
+        ];
+
+        const lacunas = [
+            ["CT021", "CPF com 11 dígitos semanticamente inválido", 5, 4, 20, "Crítico", "O código aceita qualquer sequência de 11 dígitos; requer decisão explícita de regra."],
+            ["CT022", "Atualizar usando e-mail de outro aluno, inclusive em caixa diferente", 4, 5, 20, "Crítico", "O caso simétrico de CPF existe, mas a consulta de e-mail não tem negativo dedicado."],
+            ["CT023", "Omitir dataMatricula e ativo em POST direto", 4, 4, 16, "Alto", "CT005 não alcança os valores padrão do serviço pela interface."],
+            ["CT024", "Nascimento igual a hoje e nascimento futuro", 4, 4, 16, "Alto", "A fronteira estrita de @Past não está coberta."],
+            ["CT025", "Matrícula futura sem persistência", 4, 4, 16, "Alto", "Frontend e @PastOrPresent precisam concordar."],
+            ["CT026", "Erro de persistência com rollback", 3, 5, 15, "Alto", "Transações existem, mas recuperação e consistência não são testadas."],
+            ["CT027", "Cadastro concorrente com mesmo CPF/e-mail", 3, 5, 15, "Alto", "Há janela entre checagem preventiva e restrição única."],
+            ["CT028", "API direta com valores normalizados pelo frontend", 4, 4, 16, "Alto", "CPF com máscara e e-mail com espaços podem divergir entre clientes."],
+            ["CT029", "Telefone com 9, 10, 11, 12 dígitos e caracteres", 4, 3, 12, "Alto", "RN006 não possui fronteiras próprias."],
+            ["CT030", "Plano ausente e plano desconhecido", 3, 4, 12, "Alto", "Null e enum inválido seguem caminhos de erro diferentes."],
+            ["CT031", "JSON malformado, data fora de ISO e tipos incompatíveis", 4, 3, 12, "Alto", "O handler específico ainda não é testado."],
+            ["CT032", "Excluir ID inexistente", 3, 4, 12, "Alto", "DELETE compartilha 404, mas somente GET inexistente está coberto."],
+            ["CT033", "Nome com 3, 100 e 101 caracteres", 3, 3, 9, "Moderado", "Só o limite inferior inválido é testado."],
+            ["CT034", "CPF com letras diretamente na API", 3, 4, 12, "Alto", "A interface remove caracteres e não isola a validação do backend."],
+            ["CT035", "Resposta 500 e resposta não JSON", 3, 4, 12, "Alto", "Fallbacks do frontend e handler genérico não têm caso."],
+            ["CT036", "Editar/excluir com lista local desatualizada", 3, 5, 15, "Alto", "Objetos e IDs locais podem ficar obsoletos após remoção concorrente."]
+        ];
+
+        const elementos = {
+            distribuicao: document.querySelector("#distribuicao-risco"),
+            topCasos: document.querySelector("#top-casos"),
+            matriz: document.querySelector("#matriz"),
+            hotspots: document.querySelector("#barras-hotspots"),
+            raias: document.querySelector("#raias-execucao"),
+            ranking: document.querySelector("#corpo-ranking"),
+            contadorRanking: document.querySelector("#contador-ranking"),
+            buscaRanking: document.querySelector("#busca-ranking"),
+            auditoria: document.querySelector("#corpo-auditoria"),
+            lacunas: document.querySelector("#corpo-lacunas"),
+            dialogo: document.querySelector("#dialogo-caso"),
+            dialogoTitulo: document.querySelector("#dialogo-titulo"),
+            dialogoSobrelinha: document.querySelector("#dialogo-sobrelinha"),
+            dialogoMetricas: document.querySelector("#dialogo-metricas"),
+            dialogoDetalhes: document.querySelector("#dialogo-detalhes")
+        };
+
+        let filtroAtual = "Todos";
+
+        function classeRisco(classificacao) {
+            return classificacao.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        function classificacaoPorRisco(risco) {
+            if (risco >= 17) return "Crítico";
+            if (risco >= 10) return "Alto";
+            if (risco >= 5) return "Moderado";
+            return "Baixo";
+        }
+
+        function criarElemento(tag, classe, texto) {
+            const elemento = document.createElement(tag);
+            if (classe) elemento.className = classe;
+            if (texto !== undefined) elemento.textContent = texto;
+            return elemento;
+        }
+
+        function renderizarIndicadores() {
+            const contagens = casos.reduce((acumulado, caso) => {
+                acumulado[caso.classificacao] = (acumulado[caso.classificacao] || 0) + 1;
+                return acumulado;
+            }, {});
+
+            document.querySelector("#kpi-total").textContent = casos.length;
+            document.querySelector("#kpi-criticos").textContent = contagens["Crítico"];
+            document.querySelector("#kpi-prioritarios").textContent = contagens["Crítico"] + contagens["Alto"];
+            document.querySelector("#kpi-lacunas").textContent = lacunas.length;
+
+            const ordem = ["Baixo", "Moderado", "Alto", "Crítico"];
+            ordem.forEach((nome) => {
+                const quantidade = contagens[nome] || 0;
+                const segmento = criarElemento("div", `distribuicao__segmento fundo-${classeRisco(nome)}`);
+                segmento.style.flexGrow = quantidade;
+                segmento.setAttribute("aria-label", `${nome}: ${quantidade} casos`);
+                const conteudo = criarElemento("span", "", quantidade);
+                conteudo.append(criarElemento("small", "", nome));
+                segmento.append(conteudo);
+                elementos.distribuicao.append(segmento);
+            });
+        }
+
+        function renderizarTopCinco() {
+            casos.slice(0, 5).forEach((caso) => {
+                const item = criarElemento("li");
+                const botao = criarElemento("button", "top-caso");
+                botao.type = "button";
+                botao.dataset.caso = caso.id;
+                botao.setAttribute("aria-label", `Abrir detalhes de ${caso.id}, risco ${caso.risco}`);
+                botao.append(
+                    criarElemento("span", "top-caso__posicao", caso.posicao),
+                    criarElemento("span", "top-caso__id", caso.id),
+                    criarElemento("span", "top-caso__titulo", caso.titulo),
+                    criarElemento("span", "risco-numero", caso.risco)
+                );
+                item.append(botao);
+                elementos.topCasos.append(item);
+            });
+        }
+
+        function renderizarMatriz() {
+            elementos.matriz.append(criarElemento("div", "matriz__cabecalho", "Impacto ↓"));
+            for (let probabilidade = 1; probabilidade <= 5; probabilidade += 1) {
+                elementos.matriz.append(criarElemento("div", "matriz__cabecalho", `${probabilidade}`));
+            }
+
+            for (let impacto = 5; impacto >= 1; impacto -= 1) {
+                elementos.matriz.append(criarElemento("div", "matriz__eixo", `${impacto}`));
+                for (let probabilidade = 1; probabilidade <= 5; probabilidade += 1) {
+                    const risco = impacto * probabilidade;
+                    const classificacao = classificacaoPorRisco(risco);
+                    const celula = criarElemento("div", `matriz__celula matriz__celula--${classeRisco(classificacao)}`);
+                    celula.setAttribute("aria-label", `Probabilidade ${probabilidade}, impacto ${impacto}, risco ${risco}, ${classificacao}`);
+                    celula.append(criarElemento("span", "matriz__valor", `Risco ${risco}`));
+                    const grupo = criarElemento("div", "matriz__casos");
+                    casos
+                        .filter((caso) => caso.probabilidade === probabilidade && caso.impacto === impacto)
+                        .forEach((caso) => {
+                            const botao = criarElemento("button", "chip-caso", caso.id);
+                            botao.type = "button";
+                            botao.dataset.caso = caso.id;
+                            botao.setAttribute("aria-label", `${caso.id}: ${caso.titulo}`);
+                            grupo.append(botao);
+                        });
+                    celula.append(grupo);
+                    elementos.matriz.append(celula);
+                }
+            }
+        }
+
+        function renderizarHotspots() {
+            hotspots.forEach((hotspot) => {
+                const linha = criarElemento("div", "barra");
+                const trilho = criarElemento("div", "barra__trilho");
+                const valor = criarElemento("div", "barra__valor");
+                valor.style.width = `${(hotspot.valor / 25) * 100}%`;
+                trilho.setAttribute("aria-label", `${hotspot.nome}: risco médio ${hotspot.valor.toFixed(1)} de 25`);
+                trilho.append(valor);
+                linha.append(
+                    criarElemento("span", "barra__rotulo", hotspot.nome),
+                    trilho,
+                    criarElemento("span", "barra__numero", hotspot.valor.toFixed(1))
+                );
+                elementos.hotspots.append(linha);
+            });
+        }
+
+        function renderizarExecucao() {
+            execucao.forEach((grupo) => {
+                const artigo = criarElemento("article", `raia ${grupo.classe}`);
+                const cabecalho = criarElemento("div", "raia__cabecalho");
+                cabecalho.append(
+                    criarElemento("strong", "", `${grupo.id} · ${grupo.titulo}`),
+                    criarElemento("span", "", `${grupo.casos.length} ${grupo.casos.length === 1 ? "caso" : "casos"}`)
+                );
+                const lista = criarElemento("ol", "raia__lista");
+                grupo.casos.forEach(([id, texto], indice) => {
+                    const item = criarElemento("li", "raia__item");
+                    item.append(
+                        criarElemento("span", "raia__ordem", indice + 1),
+                        criarElemento("span", "raia__caso", id),
+                        criarElemento("span", "raia__texto", texto)
+                    );
+                    lista.append(item);
+                });
+                artigo.append(cabecalho, lista);
+                elementos.raias.append(artigo);
+            });
+        }
+
+        function renderizarRanking() {
+            const termo = elementos.buscaRanking.value.trim().toLocaleLowerCase("pt-BR");
+            const filtrados = casos.filter((caso) => {
+                const correspondeFiltro = filtroAtual === "Todos" || caso.classificacao === filtroAtual;
+                const texto = `${caso.id} ${caso.titulo} ${caso.funcionalidade}`.toLocaleLowerCase("pt-BR");
+                return correspondeFiltro && (!termo || texto.includes(termo));
+            });
+
+            elementos.ranking.replaceChildren();
+            filtrados.forEach((caso) => {
+                const linha = document.createElement("tr");
+                const celulaCaso = document.createElement("td");
+                const botao = criarElemento("button", "caso-link", caso.id);
+                botao.type = "button";
+                botao.dataset.caso = caso.id;
+                botao.setAttribute("aria-label", `Abrir detalhes de ${caso.id}`);
+                celulaCaso.append(botao);
+
+                const selo = criarElemento("span", `selo selo--${classeRisco(caso.classificacao)}`, caso.classificacao);
+                const celulaClassificacao = document.createElement("td");
+                celulaClassificacao.append(selo);
+
+                [
+                    [caso.posicao, "numero"],
+                    [celulaCaso],
+                    [caso.funcionalidade],
+                    [caso.prioridade],
+                    [caso.probabilidade, "numero"],
+                    [caso.impacto, "numero"],
+                    [caso.risco, "numero"],
+                    [celulaClassificacao],
+                    [caso.confianca]
+                ].forEach(([conteudo, classe]) => {
+                    if (conteudo instanceof HTMLElement) {
+                        linha.append(conteudo);
+                    } else {
+                        linha.append(criarElemento("td", classe || "", conteudo));
+                    }
+                });
+                elementos.ranking.append(linha);
+            });
+
+            elementos.contadorRanking.textContent = `${filtrados.length} ${filtrados.length === 1 ? "caso" : "casos"}`;
+        }
+
+        function renderizarAuditoria() {
+            auditoria.forEach((registro) => {
+                const linha = document.createElement("tr");
+                registro.forEach((texto) => linha.append(criarElemento("td", "", texto)));
+                elementos.auditoria.append(linha);
+            });
+        }
+
+        function renderizarLacunas() {
+            lacunas.forEach(([id, objetivo, probabilidade, impacto, risco, classificacao, justificativa]) => {
+                const linha = document.createElement("tr");
+                linha.append(
+                    criarElemento("td", "", id),
+                    criarElemento("td", "", objetivo),
+                    criarElemento("td", "numero", probabilidade),
+                    criarElemento("td", "numero", impacto),
+                    criarElemento("td", "numero", risco)
+                );
+                const celulaClassificacao = document.createElement("td");
+                celulaClassificacao.append(criarElemento("span", `selo selo--${classeRisco(classificacao)}`, classificacao));
+                linha.append(celulaClassificacao, criarElemento("td", "", justificativa));
+                elementos.lacunas.append(linha);
+            });
+        }
+
+        function abrirDetalhes(id) {
+            const caso = casos.find((item) => item.id === id);
+            if (!caso) return;
+
+            elementos.dialogoSobrelinha.textContent = `${caso.id} · ${caso.funcionalidade}`;
+            elementos.dialogoTitulo.textContent = caso.titulo;
+            elementos.dialogoMetricas.replaceChildren();
+            [
+                `Probabilidade ${caso.probabilidade}/5`,
+                `Impacto ${caso.impacto}/5`,
+                `Risco ${caso.risco}`,
+                caso.classificacao,
+                `Confiança ${caso.confianca}`,
+                `Prioridade original ${caso.prioridade}`
+            ].forEach((texto) => elementos.dialogoMetricas.append(criarElemento("span", "", texto)));
+
+            elementos.dialogoDetalhes.replaceChildren();
+            const detalhes = caso.hipotese
+                ? [
+                    ["Hipótese de defeito", caso.hipotese],
+                    ["Evidência", caso.evidencia],
+                    ["Motivo da probabilidade", caso.motivo],
+                    ["Consequência", caso.consequencia],
+                    ["Camadas afetadas", caso.camadas],
+                    ["Ação preventiva", caso.acao]
+                ]
+                : [
+                    ["Leitura do risco", `${caso.id} foi classificado como ${caso.classificacao.toLowerCase()} por combinar probabilidade ${caso.probabilidade} e impacto ${caso.impacto}.`],
+                    ["Próxima ação", "Consultar o relatório técnico em Markdown para o contexto completo e executar conforme a raia de prioridade."]
+                ];
+
+            detalhes.forEach(([termo, descricao]) => {
+                const bloco = document.createElement("div");
+                bloco.append(criarElemento("dt", "", termo), criarElemento("dd", "", descricao));
+                elementos.dialogoDetalhes.append(bloco);
+            });
+
+            elementos.dialogo.showModal();
+        }
+
+        document.addEventListener("click", (evento) => {
+            const acionador = evento.target.closest("[data-caso]");
+            if (acionador) abrirDetalhes(acionador.dataset.caso);
+
+            const filtro = evento.target.closest("[data-filtro]");
+            if (filtro) {
+                filtroAtual = filtro.dataset.filtro;
+                document.querySelectorAll("[data-filtro]").forEach((botao) => {
+                    botao.setAttribute("aria-pressed", String(botao === filtro));
+                });
+                renderizarRanking();
+            }
+        });
+
+        elementos.buscaRanking.addEventListener("input", renderizarRanking);
+        document.querySelector("#fechar-dialogo").addEventListener("click", () => elementos.dialogo.close());
+        elementos.dialogo.addEventListener("click", (evento) => {
+            if (evento.target === elementos.dialogo) elementos.dialogo.close();
+        });
+
+        renderizarIndicadores();
+        renderizarTopCinco();
+        renderizarMatriz();
+        renderizarHotspots();
+        renderizarExecucao();
+        renderizarRanking();
+        renderizarAuditoria();
+        renderizarLacunas();
+    </script>
 </body>
 </html>

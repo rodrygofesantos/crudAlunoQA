@@ -100,6 +100,56 @@ Não altere a pontuação apenas para fazê-la coincidir com a prioridade já in
 
 ## Resultado esperado
 
+Gere dois artefatos complementares:
+
+1. um relatório técnico em Markdown, que funcione como fonte completa e
+   auditável da análise;
+2. um arquivo HTML autônomo no formato de **dashboard executivo interativo**,
+   pronto para ser aberto localmente no navegador, sem servidor e sem
+   dependências externas.
+
+O HTML é a entrega principal para consulta. Não apresente o conteúdo como uma
+simples conversão linear do Markdown. Organize os dados para leitura visual,
+comparação e tomada de decisão.
+
+### Diretrizes obrigatórias para o dashboard
+
+- mostrar no primeiro bloco os indicadores: total de casos, casos críticos,
+  casos críticos + altos, lacunas propostas e nível de confiança predominante;
+- destacar os cinco casos de maior risco em componentes visuais compactos;
+- apresentar a distribuição dos casos por classificação de risco;
+- apresentar uma matriz 5 × 5 de probabilidade e impacto, posicionando cada caso
+  na célula correspondente;
+- apresentar os *hotspots* em gráfico de barras comparável;
+- apresentar a ordem P0–P3 em raias ou colunas, preservando dependências;
+- disponibilizar ranking completo com pesquisa e filtros por classificação;
+- permitir consultar a justificativa detalhada dos casos críticos e altos por
+  expansão, painel ou diálogo, sem exibir todo o texto simultaneamente;
+- apresentar auditoria e lacunas em tabelas responsivas, com destaque visual
+  para severidade e ação recomendada;
+- usar rótulos, valores e padrões além de cor para comunicar risco;
+- manter legenda consistente: baixo, moderado, alto e crítico;
+- aplicar hierarquia visual clara, espaçamento adequado e contraste acessível;
+- adaptar o layout a telas grandes e celulares, sem cortar conteúdo;
+- oferecer estilos de impressão para exportação em PDF;
+- usar HTML semântico, controles acessíveis por teclado e textos em português
+  do Brasil;
+- manter CSS, JavaScript e dados no próprio HTML;
+- não usar bibliotecas, fontes, APIs ou arquivos externos;
+- não usar `fetch`, servidor local ou conexão com a internet;
+- incluir aviso visível de que o resultado é uma estimativa heurística;
+- não inventar métricas para preencher cartões ou gráficos: todos os números
+  devem ser derivados e reconciliáveis com o ranking.
+
+Evite:
+
+- páginas formadas principalmente por parágrafos longos;
+- tabelas extensas como primeiro elemento da página;
+- cartões decorativos sem função analítica;
+- gráficos redundantes que comuniquem a mesma relação;
+- animações excessivas;
+- percentuais de probabilidade sem dados históricos.
+
 ### 1. Resumo executivo
 
 Apresente:
