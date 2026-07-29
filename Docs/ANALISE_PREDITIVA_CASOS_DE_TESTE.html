@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Análise preditiva de casos de teste</title>
+  <style>
+    :root {
+      --bg: #eef3f7;
+      --paper: #ffffff;
+      --ink: #17212b;
+      --muted: #52616f;
+      --line: #d5dee6;
+      --primary: #005380;
+      --primary-soft: #e8f4f8;
+      --quote: #fff8dc;
+      --code: #edf2f6;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font: 16px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 32px auto;
+      padding: clamp(28px, 5vw, 72px);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 16px 40px rgb(21 52 73 / 10%);
+    }
+
+    h1, h2, h3 {
+      color: #103b55;
+      line-height: 1.25;
+      text-wrap: balance;
+    }
+
+    h1 {
+      margin: 0 0 1.2em;
+      padding-bottom: .55em;
+      border-bottom: 4px solid var(--primary);
+      font-size: clamp(2rem, 4vw, 3.15rem);
+    }
+
+    h2 {
+      margin-top: 2.4em;
+      padding-bottom: .3em;
+      border-bottom: 1px solid var(--line);
+      font-size: 1.65rem;
+    }
+
+    h3 {
+      margin-top: 1.8em;
+      font-size: 1.25rem;
+    }
+
+    h1 span, h2 span, h3 span { display: none; }
+
+    p, li { max-width: 92ch; }
+    li + li { margin-top: .38em; }
+
+    a { color: var(--primary); }
+
+    blockquote {
+      margin: 1.5em 0;
+      padding: 1em 1.2em;
+      border-left: 5px solid #d1a500;
+      background: var(--quote);
+      color: #443a16;
+    }
+
+    blockquote p { margin: 0; }
+
+    code {
+      padding: .14em .38em;
+      border-radius: 5px;
+      background: var(--code);
+      color: #773b18;
+      font: .91em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    pre {
+      overflow: auto;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #16232c;
+      color: #f4f7f9;
+    }
+
+    pre code { padding: 0; background: transparent; color: inherit; }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1.25em 0 1.8em;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .91rem;
+    }
+
+    th, td {
+      padding: .72rem .8rem;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th:last-child, td:last-child { border-right: 0; }
+    tbody tr:last-child td { border-bottom: 0; }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #dfeff5;
+      color: #103b55;
+      font-weight: 700;
+    }
+
+    tbody tr:nth-child(even) { background: #f8fafb; }
+    tbody tr:hover { background: var(--primary-soft); }
+
+    footer {
+      margin-top: 4rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    @media (max-width: 680px) {
+      main {
+        width: 100%;
+        margin: 0;
+        padding: 22px 18px 40px;
+        border: 0;
+        border-radius: 0;
+      }
+
+      h2 { margin-top: 2em; }
+      th, td { min-width: 130px; }
+    }
+
+    @media print {
+      @page { size: A4; margin: 14mm; }
+
+      html, body { background: #fff; }
+
+      main {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+      }
+
+      h1 { font-size: 25pt; }
+      h2 { font-size: 17pt; break-after: avoid; }
+      h3 { font-size: 13pt; break-after: avoid; }
+      blockquote, table, pre { break-inside: avoid; }
+      th { position: static; }
+      a { color: inherit; text-decoration: none; }
+      footer { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main id="top">
+
+<h1 id="label-An-C3-A1lise+preditiva+baseada+em+risco+dos+casos+de+teste+funcionais">Análise preditiva baseada em risco dos casos de teste funcionais<span><a href="#label-An-C3-A1lise+preditiva+baseada+em+risco+dos+casos+de+teste+funcionais">&para;</a> <a href="#top">&uarr;</a></span></h1>
+
+<h2 id="label-1.+Escopo-2C+m-C3-A9todo+e+limita-C3-A7-C3-B5es">1. Escopo, método e limitações<span><a href="#label-1.+Escopo-2C+m-C3-A9todo+e+limita-C3-A7-C3-B5es">&para;</a> <a href="#top">&uarr;</a></span></h2>
+
+<p>Esta análise considera os 20 casos identificados diretamente pelas seções <code>CT001</code> a <code>CT020</code> de <code>Docs/CASOS_DE_TESTE_FUNCIONAIS.md</code> e as evidências disponíveis no código-fonte do frontend, controller, DTO, serviço, repositório, entidade, tratamento global de exceções e configuração do H2.</p>
+
+<blockquote>
+<p>Esta é uma estimativa heurística de risco, e não uma probabilidade estatística calculada a partir de dados históricos.</p>
+</blockquote>
+
+<p>Não foram fornecidos resultados anteriores de execução, histórico de defeitos, cobertura, complexidade ciclomática, alterações funcionais recentes ou incidentes. Por isso:</p>
+<ul><li>
+<p><code>Probabilidade</code> representa a chance qualitativa de o caso revelar um defeito  do produto, de 1 a 5;</p>
+</li><li>
+<p><code>Impacto</code> representa a consequência funcional, técnica e operacional do  defeito hipotético, de 1 a 5;</p>
+</li><li>
+<p><code>Risco</code> é calculado por <code>Probabilidade × Impacto</code>;</p>
+</li><li>
+<p>a prioridade declarada no documento foi preservada como dado de origem e não  foi usada para forçar a pontuação;</p>
+</li><li>
+<p>a confiança indica a força das evidências estáticas, não a certeza de que  existe um defeito;</p>
+</li><li>
+<p>empates foram ordenados por impacto, probabilidade, centralidade no fluxo e  dependência para os testes seguintes.</p>
+</li></ul>
+
+<p>As inferências sobre comportamento em execução foram identificadas como tais. O código não foi executado e não há testes automatizados no repositório.</p>
+
+<h2 id="label-2.+Resumo+executivo">2. Resumo executivo<span><a href="#label-2.+Resumo+executivo">&para;</a> <a href="#top">&uarr;</a></span></h2>
+
+<h3 id="label-2.1+Cinco+casos+com+maior+risco">2.1 Cinco casos com maior risco<span><a href="#label-2.1+Cinco+casos+com+maior+risco">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Posição</th><th scope="col">Caso</th><th scope="col">Risco</th><th scope="col">Motivo dominante</th></tr></thead><tbody><tr><td>1</td><td>CT004 — cadastro válido completo</td><td>25 — Crítico</td><td>Concentra 12 requisitos e atravessa frontend, API, validação, serviço e banco</td></tr><tr><td>2</td><td>CT011 — atualização válida</td><td>25 — Crítico</td><td>Modifica quase todo o estado persistido e combina unicidade, normalização e preservação de identidade</td></tr><tr><td>3</td><td>CT009 — CPF duplicado no cadastro</td><td>20 — Crítico</td><td>Protege uma chave de negócio central em serviço e banco</td></tr><tr><td>4</td><td>CT010 — e-mail duplicado sem diferenciar caixa</td><td>20 — Crítico</td><td>Combina normalização, consulta case-insensitive e restrição única</td></tr><tr><td>5</td><td>CT014 — exclusão confirmada pela interface</td><td>20 — Crítico</td><td>Executa remoção física irreversível por todas as camadas</td></tr></tbody></table></div>
+<p>O corte dos cinco primeiros não significa que CT013, CT012, CT001 e CT019 sejam dispensáveis. Eles permanecem de risco alto e protegem, respectivamente, unicidade na atualização, autoexclusão das verificações de duplicidade, disponibilidade da listagem e contrato da exclusão.</p>
+
+<h3 id="label-2.2+Funcionalidades+mais+propensas+a+revelar+defeitos">2.2 Funcionalidades mais propensas a revelar defeitos<span><a href="#label-2.2+Funcionalidades+mais+propensas+a+revelar+defeitos">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ol><li>
+<p><strong>Atualização:</strong> maior concentração de probabilidade. O fluxo carrega uma  entidade, normaliza CPF e e-mail, ignora o próprio ID nas consultas de  unicidade, altera seis campos e preserva condicionalmente outros dois.</p>
+</li><li>
+<p><strong>Cadastro e validações:</strong> alta combinação de regras, limites, padrões,  normalização, duplicidade e persistência. A validação é duplicada entre  JavaScript e Bean Validation.</p>
+</li><li>
+<p><strong>Consulta/listagem no frontend:</strong> a listagem é assíncrona e alimenta  indicadores, pesquisa, filtros, edição e exclusão a partir de um estado local.</p>
+</li></ol>
+
+<h3 id="label-2.3+Defeitos+de+maior+impacto">2.3 Defeitos de maior impacto<span><a href="#label-2.3+Defeitos+de+maior+impacto">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p>exclusão do aluno errado ou exclusão sem uma confirmação efetiva;</p>
+</li><li>
+<p>aceitação de CPF ou e-mail já usados por outro aluno;</p>
+</li><li>
+<p>atualização parcial, no registro errado ou com perda de valores anteriores;</p>
+</li><li>
+<p>falha de transação que deixe a interface e o banco em estados divergentes;</p>
+</li><li>
+<p>perda inesperada de registros ou interpretação incorreta da persistência  temporária do H2;</p>
+</li><li>
+<p>criação de aluno com padrões incorretos de matrícula ou situação.</p>
+</li></ul>
+
+<h3 id="label-2.4+Principais+riscos+para+a+integridade+dos+dados">2.4 Principais riscos para a integridade dos dados<span><a href="#label-2.4+Principais+riscos+para+a+integridade+dos+dados">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Unicidade:</strong> as verificações preventivas do serviço e as restrições do banco  precisam produzir o mesmo resultado, inclusive sob concorrência.</p>
+</li><li>
+<p><strong>Normalização:</strong> o frontend remove máscaras, enquanto o serviço apenas aplica  <code>trim</code> ao CPF e converte o e-mail para minúsculas. Consumidores diretos da API  podem se comportar de forma diferente da interface.</p>
+</li><li>
+<p><strong>Atualização:</strong> valores nulos de <code>dataMatricula</code> e <code>ativo</code> preservam o estado  anterior, enquanto os demais campos são sobrescritos.</p>
+</li><li>
+<p><strong>Exclusão física:</strong> não existe recuperação no domínio depois do <code>DELETE</code>.</p>
+</li><li>
+<p><strong>Persistência efêmera:</strong> <code>jdbc:h2:mem</code> com <code>create-drop</code> elimina os dados ao  final do processo; qualquer expectativa de retenção entre reinícios é  incompatível com a configuração.</p>
+</li></ul>
+
+<h3 id="label-2.5+Direcionamento">2.5 Direcionamento<span><a href="#label-2.5+Direcionamento">&para;</a> <a href="#top">&uarr;</a></span></h3>
+
+<p>A equipe deve concentrar primeiro os testes no encadeamento <strong>cadastro → unicidade → atualização → exclusão</strong>, usando pelo menos dois registros. Em paralelo à execução manual pela interface, deve validar diretamente a API nos pontos que o frontend normaliza ou preenche automaticamente. Em seguida, deve testar tratamento de erros, limites e persistência. Pesquisa, estados vazios e consultas simples podem entrar na regressão posterior.</p>
+
+<h2 id="label-3.+Auditoria+da+qualidade+e+consist-C3-AAncia+dos+dados">3. Auditoria da qualidade e consistência dos dados<span><a href="#label-3.+Auditoria+da+qualidade+e+consist-C3-AAncia+dos+dados">&para;</a> <a href="#top">&uarr;</a></span></h2>
+
+<h3 id="label-3.1+Recontagem+independente">3.1 Recontagem independente<span><a href="#label-3.1+Recontagem+independente">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Dimensão</th><th scope="col">Resultado contado nas seções CT001–CT020</th><th scope="col">Valor do resumo</th><th scope="col">Situação</th></tr></thead><tbody><tr><td>Total</td><td>20</td><td>20</td><td>Consistente</td></tr><tr><td>Prioridade crítica</td><td>8</td><td>8</td><td>Consistente</td></tr><tr><td>Prioridade alta</td><td>10</td><td>8</td><td>Inconsistente</td></tr><tr><td>Prioridade média</td><td>2</td><td>4</td><td>Inconsistente</td></tr><tr><td>Tipo positivo</td><td>11</td><td>10</td><td>Inconsistente</td></tr><tr><td>Tipo negativo</td><td>9</td><td>9</td><td>Consistente</td></tr></tbody></table></div>
+<p>As prioridades corretas, conforme os próprios casos, são:</p>
+<ul><li>
+<p>críticas: CT001, CT004, CT007, CT009, CT010, CT011, CT013 e CT014;</p>
+</li><li>
+<p>altas: CT002, CT003, CT005, CT006, CT008, CT012, CT015, CT017, CT018 e CT019;</p>
+</li><li>
+<p>médias: CT016 e CT020.</p>
+</li></ul>
+
+<p>Os 11 casos positivos são CT001, CT002, CT004, CT005, CT011, CT012, CT014, CT016, CT017, CT019 e CT020.</p>
+
+<h3 id="label-3.2+Inconsist-C3-AAncias+encontradas">3.2 Inconsistências encontradas<span><a href="#label-3.2+Inconsist-C3-AAncias+encontradas">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Inconsistência encontrada</th><th scope="col">Evidência</th><th scope="col">Consequência para a análise</th><th scope="col">Correção recomendada</th></tr></thead><tbody><tr><td>Distribuição de prioridades incorreta</td><td>Seções individuais totalizam 8 críticas, 10 altas e 2 médias; o resumo informa 8/8/4</td><td>Distorce capacidade, ordem e cobertura por severidade declarada</td><td>Alterar o resumo para 8 críticas, 10 altas e 2 médias</td></tr><tr><td>Quantidade de positivos incorreta</td><td>Há 11 casos com <code>Tipo = Positivo</code>; o resumo informa 10</td><td>Compromete análises por partição positiva/negativa</td><td>Alterar o resumo para 11 positivos</td></tr><tr><td>Resumo por funcionalidade não usa as categorias declaradas nos casos e soma 23 ocorrências</td><td>Pelos campos <code>Funcionalidade</code>: Inicialização 2, Listagem 1, Cadastro 7, Atualização 3, Exclusão 3, Pesquisa e filtros 1, Consulta por ID 2 e Persistência 1</td><td>Impede reconciliação e mistura funcionalidade, canal e nível</td><td>Recalcular pelas oito categorias declaradas ou marcar explicitamente categorias sobrepostas</td></tr><tr><td><code>API005</code> associado ao caso errado na matriz</td><td>A matriz aponta CT015; CT015 apenas cancela o diálogo e cobre UI001. CT014 e CT019 declaram API005 e executam <code>DELETE</code></td><td>Produz falsa cobertura do contrato 204 e omite os testes que o verificam</td><td>Substituir CT015 por CT014 e CT019</td></tr><tr><td>Requisitos UI usados, mas ausentes da matriz</td><td>CT002/CT003 declaram UI004; CT016 declara UI005; não há linhas UI004 ou UI005</td><td>Requisitos ficam sem definição e sem rastreabilidade verificável</td><td>Adicionar UI004 e UI005 com descrição, casos e prioridade</td></tr><tr><td>Matriz diverge dos requisitos declarados nos casos</td><td>Exemplos: RF001 omite CT020; RF002 inclui CT003 sem o RF002 estar no caso e omite CT020; RF004 associa CT012/CT013 sem esses IDs constarem nos casos e omite CT020; RF005 associa CT015 e omite CT019/CT020</td><td>Contagens de cobertura e impacto por requisito tornam-se não confiáveis</td><td>Gerar a matriz a partir de uma fonte única e revisar cada relação bidirecional</td></tr><tr><td>Diversas regras são sub-rastreadas</td><td>RN001 omite CT004/CT013; RN002 omite CT004; RN003 omite CT004/CT005/CT011; RN005 omite CT004/CT011; RN007–RN009 omitem CT011; RN010 omite CT004</td><td>Pode ocultar regressões em fluxos que exercitam a mesma regra</td><td>Incluir todos os casos que afirmam cobrir cada regra ou remover a afirmação do caso</td></tr><tr><td><code>API001</code> e <code>API004</code> não são coerentes entre casos e matriz</td><td>API001 inclui CT005 apenas na matriz; API004 inclui CT011/CT012 apenas na matriz, embora não apareça em seus campos de requisitos</td><td>A cobertura do contrato de criação/atualização depende de interpretação externa ao caso</td><td>Harmonizar os IDs nos casos e na matriz</td></tr><tr><td>CT018 espera nomes de campos inexistentes no contrato real</td><td>O caso espera <code>status</code> e <code>path</code>; <code>ErroResposta</code> serializa <code>codigoHttp</code> e <code>caminho</code>, além de <code>dataHora</code> e <code>errosValidacao</code></td><td>Pode gerar falso defeito mesmo com o produto conforme o código e o README</td><td>Corrigir o resultado esperado para <code>dataHora</code>, <code>codigoHttp</code>, <code>erro</code>, <code>mensagem</code>, <code>caminho</code> e <code>errosValidacao</code></td></tr><tr><td>CT005 não consegue omitir os padrões pela interface</td><td><code>abrirCadastro()</code> preenche a data atual e marca <code>ativo</code>; <code>obterDadosFormulario()</code> sempre envia <code>dataMatricula</code> e <code>ativo</code></td><td>O caso não revela defeitos nos ramos de padrão do serviço, embora declare esse objetivo</td><td>Dividir em teste de interface para opcionais e teste direto de API omitindo as duas propriedades</td></tr><tr><td>DT001 é chamado de “CPF válido”, mas a validade é ambígua</td><td><code>12345678901</code> tem 11 dígitos, porém não satisfaz a validação semântica usual; o código valida apenas <code>\d{11}</code></td><td>Pode confundir validade sintática com validade de negócio</td><td>Renomear para “CPF sintaticamente válido” e decidir se dígitos verificadores fazem parte do requisito</td></tr><tr><td>Dados de fronteira catalogados não viraram casos</td><td>DT007 (nome com 101), DT010 (CPF com letras), DT014 (nascimento hoje) e DT015 (matrícula futura) não são usados em casos específicos</td><td>O catálogo dá aparência de cobertura que não existe</td><td>Criar casos dedicados e ligar cada dado à rastreabilidade</td></tr><tr><td>Metadado do commit não corresponde ao HEAD atual</td><td>Documento declara <code>25dfa5d</code>; a revisão atual é <code>87a4272</code></td><td>A reprodução do conjunto completo pode usar uma revisão diferente</td><td>Registrar separadamente commit do código e commit do documento; o diff mostra que os fontes funcionais não mudaram desde <code>25dfa5d</code></td></tr><tr><td>Sobreposição parcial não está identificada</td><td>CT014 valida exclusão pela UI e CT019 valida o contrato 204 da mesma operação</td><td>Pode ser interpretada como duplicidade ou causar execução redundante</td><td>Manter ambos, mas explicitar níveis e reutilizar a mesma preparação de dados</td></tr></tbody></table></div>
+<p>Não foi encontrada duplicidade exata. CT014 e CT019 possuem interseção legítima, mas objetivos e canais distintos.</p>
+
+<h3 id="label-3.3+Matriz+de+rastreabilidade+corrigida+em+n-C3-ADvel+m-C3-ADnimo">3.3 Matriz de rastreabilidade corrigida em nível mínimo<span><a href="#label-3.3+Matriz+de+rastreabilidade+corrigida+em+n-C3-ADvel+m-C3-ADnimo">&para;</a> <a href="#top">&uarr;</a></span></h3>
+
+<p>Esta correção reflete as associações declaradas nas próprias seções dos casos; não cria requisitos novos.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Requisito</th><th scope="col">Casos declarados nas seções individuais</th></tr></thead><tbody><tr><td>RF001</td><td>CT004, CT005, CT020</td></tr><tr><td>RF002</td><td>CT001, CT002, CT020</td></tr><tr><td>RF003</td><td>CT017, CT018</td></tr><tr><td>RF004</td><td>CT011, CT020</td></tr><tr><td>RF005</td><td>CT014, CT019, CT020</td></tr><tr><td>RF006</td><td>CT016</td></tr><tr><td>RN001</td><td>CT004, CT005, CT009, CT012, CT013</td></tr><tr><td>RN002</td><td>CT004, CT005, CT010, CT012</td></tr><tr><td>RN003</td><td>CT004, CT006, CT011</td></tr><tr><td>RN004</td><td>CT004, CT007</td></tr><tr><td>RN005</td><td>CT004, CT008, CT011</td></tr><tr><td>RN006</td><td>CT004, CT005</td></tr><tr><td>RN007</td><td>CT004, CT005, CT011</td></tr><tr><td>RN008</td><td>CT004, CT005, CT011</td></tr><tr><td>RN009</td><td>CT004, CT005, CT011</td></tr><tr><td>RN010</td><td>CT004, CT005</td></tr><tr><td>UI001</td><td>CT014, CT015</td></tr><tr><td>UI004</td><td>CT002, CT003</td></tr><tr><td>UI005</td><td>CT016</td></tr><tr><td>API001</td><td>CT004</td></tr><tr><td>API002</td><td>CT001, CT003</td></tr><tr><td>API003</td><td>CT017, CT018</td></tr><tr><td>API004</td><td>Nenhum caso declara explicitamente</td></tr><tr><td>API005</td><td>CT014, CT019</td></tr><tr><td>API006</td><td>CT006, CT007, CT008</td></tr><tr><td>API007</td><td>CT009, CT010, CT013</td></tr><tr><td>API008</td><td>CT018</td></tr></tbody></table></div>
+<p>Inferência: funcionalmente, CT011 e CT012 exercitam <code>PUT</code> e poderiam cobrir API004, mas essa associação deve ser corrigida no catálogo antes de ser tratada como dado. Da mesma forma, CT003 se relaciona ao endpoint de listagem, mas não declara RF002. A tabela acima preserva a fonte em vez de completar relações por suposição.</p>
+
+<h2 id="label-4.+Ranking+preditivo+de+todos+os+casos">4. Ranking preditivo de todos os casos<span><a href="#label-4.+Ranking+preditivo+de+todos+os+casos">&para;</a> <a href="#top">&uarr;</a></span></h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Posição</th><th scope="col">Caso</th><th scope="col">Funcionalidade</th><th scope="col">Prioridade original</th><th scope="col">Probabilidade</th><th scope="col">Impacto</th><th scope="col">Risco</th><th scope="col">Classificação</th><th scope="col">Confiança</th></tr></thead><tbody><tr><td>1</td><td>CT004</td><td>Cadastro</td><td>Crítica</td><td>5</td><td>5</td><td>25</td><td>Crítico</td><td>Alta</td></tr><tr><td>2</td><td>CT011</td><td>Atualização</td><td>Crítica</td><td>5</td><td>5</td><td>25</td><td>Crítico</td><td>Alta</td></tr><tr><td>3</td><td>CT009</td><td>Cadastro/CPF único</td><td>Crítica</td><td>4</td><td>5</td><td>20</td><td>Crítico</td><td>Alta</td></tr><tr><td>4</td><td>CT010</td><td>Cadastro/e-mail único</td><td>Crítica</td><td>4</td><td>5</td><td>20</td><td>Crítico</td><td>Alta</td></tr><tr><td>5</td><td>CT014</td><td>Exclusão pela interface</td><td>Crítica</td><td>4</td><td>5</td><td>20</td><td>Crítico</td><td>Alta</td></tr><tr><td>6</td><td>CT013</td><td>Atualização/CPF único</td><td>Crítica</td><td>4</td><td>4</td><td>16</td><td>Alto</td><td>Alta</td></tr><tr><td>7</td><td>CT012</td><td>Atualização sem falso conflito</td><td>Alta</td><td>4</td><td>4</td><td>16</td><td>Alto</td><td>Alta</td></tr><tr><td>8</td><td>CT001</td><td>Inicialização/listagem</td><td>Crítica</td><td>4</td><td>4</td><td>16</td><td>Alto</td><td>Alta</td></tr><tr><td>9</td><td>CT019</td><td>Exclusão pela API</td><td>Alta</td><td>3</td><td>5</td><td>15</td><td>Alto</td><td>Alta</td></tr><tr><td>10</td><td>CT007</td><td>Validação de CPF</td><td>Crítica</td><td>3</td><td>4</td><td>12</td><td>Alto</td><td>Alta</td></tr><tr><td>11</td><td>CT005</td><td>Cadastro com opcionais</td><td>Alta</td><td>3</td><td>4</td><td>12</td><td>Alto</td><td>Média</td></tr><tr><td>12</td><td>CT020</td><td>Persistência H2</td><td>Média</td><td>3</td><td>4</td><td>12</td><td>Alto</td><td>Média</td></tr><tr><td>13</td><td>CT016</td><td>Pesquisa e filtros</td><td>Média</td><td>4</td><td>3</td><td>12</td><td>Alto</td><td>Alta</td></tr><tr><td>14</td><td>CT015</td><td>Cancelamento de exclusão</td><td>Alta</td><td>2</td><td>5</td><td>10</td><td>Alto</td><td>Média</td></tr><tr><td>15</td><td>CT003</td><td>Erro ao carregar</td><td>Alta</td><td>3</td><td>3</td><td>9</td><td>Moderado</td><td>Média</td></tr><tr><td>16</td><td>CT006</td><td>Limite mínimo do nome</td><td>Alta</td><td>3</td><td>3</td><td>9</td><td>Moderado</td><td>Alta</td></tr><tr><td>17</td><td>CT008</td><td>Formato de e-mail</td><td>Alta</td><td>3</td><td>3</td><td>9</td><td>Moderado</td><td>Alta</td></tr><tr><td>18</td><td>CT018</td><td>Consulta de ID inexistente</td><td>Alta</td><td>3</td><td>3</td><td>9</td><td>Moderado</td><td>Alta</td></tr><tr><td>19</td><td>CT017</td><td>Consulta de ID existente</td><td>Alta</td><td>2</td><td>3</td><td>6</td><td>Moderado</td><td>Alta</td></tr><tr><td>20</td><td>CT002</td><td>Estado de lista vazia</td><td>Alta</td><td>2</td><td>2</td><td>4</td><td>Baixo</td><td>Alta</td></tr></tbody></table></div>
+<h3 id="label-4.1+Leitura+do+ranking">4.1 Leitura do ranking<span><a href="#label-4.1+Leitura+do+ranking">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p>A prioridade original superestima CT001 e CT007 em relação ao risco  calculado e subestima CT012, CT019 e CT020.</p>
+</li><li>
+<p>CT016, embora tenha prioridade média, recebe risco alto porque combina  normalização, três campos pesquisáveis, filtro de situação, contador e três  estados de renderização em um único caso.</p>
+</li><li>
+<p>CT005 não recebeu probabilidade maior porque a interface sempre envia  <code>dataMatricula</code> e <code>ativo</code>. Assim, o caso atual não alcança os ramos de omissão  que pretende validar.</p>
+</li><li>
+<p>CT018 tem confiança alta quanto à evidência de contrato, mas sua especificação  precisa ser corrigida antes da execução para não registrar um falso positivo.</p>
+</li></ul>
+
+<h2 id="label-5.+Justificativa+dos+casos+cr-C3-ADticos+e+altos">5. Justificativa dos casos críticos e altos<span><a href="#label-5.+Justificativa+dos+casos+cr-C3-ADticos+e+altos">&para;</a> <a href="#top">&uarr;</a></span></h2>
+
+<h3 id="label-CT004+-E2-80-94+Cadastro+completo+-E2-80-94+risco+25">CT004 — Cadastro completo — risco 25<span><a href="#label-CT004+-E2-80-94+Cadastro+completo+-E2-80-94+risco+25">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> uma regra válida em uma camada pode ser transformada  ou rejeitada em outra; o registro pode ser criado com campo incorreto ou a  interface pode não refletir a persistência.</p>
+</li><li>
+<p><strong>Evidência:</strong> <code>salvarAluno()</code> remove máscaras e faz <code>POST</code>;  <code>AlunoRequest</code> valida oito campos; <code>AlunoService.cadastrar()</code> normaliza,  verifica duplicidade, aplica padrões e salva; <code>Aluno</code> impõe nulidade,  comprimentos e unicidade.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> é o caso mais amplo, cobre 12 requisitos e  atravessa todas as camadas com várias transformações.</p>
+</li><li>
+<p><strong>Consequência:</strong> indisponibilidade do cadastro principal ou criação de dados  inválidos/incompletos.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> HTML/JavaScript, controller, DTO, serviço, repositório,  JPA e H2.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> decompor o fluxo em asserções por contrato e confirmar o  registro por <code>GET</code> após o <code>POST</code>, não apenas pela tabela recarregada.</p>
+</li></ul>
+
+<h3 id="label-CT011+-E2-80-94+Atualiza-C3-A7-C3-A3o+v-C3-A1lida+-E2-80-94+risco+25">CT011 — Atualização válida — risco 25<span><a href="#label-CT011+-E2-80-94+Atualiza-C3-A7-C3-A3o+v-C3-A1lida+-E2-80-94+risco+25">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> a edição pode sobrescrever campos errados, perder  valores, alterar a situação incorretamente ou produzir falso conflito.</p>
+</li><li>
+<p><strong>Evidência:</strong> <code>abrirEdicao()</code> preenche oito controles; <code>salvarAluno()</code> usa  <code>PUT</code>; <code>AlunoService.atualizar()</code> busca por ID, normaliza, verifica  duplicidade, altera seis campos e atualiza condicionalmente matrícula e  situação.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> reúne leitura prévia, transformação no  formulário, regras de unicidade e persistência de múltiplas alterações.</p>
+</li><li>
+<p><strong>Consequência:</strong> corrupção do cadastro existente e propagação para  listagem, pesquisa, indicadores e exclusão.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> frontend, API, validação, serviço, repositório e banco.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> comparar fotografia antes/depois, verificar ID imutável  e confirmar individualmente campos alterados e preservados.</p>
+</li></ul>
+
+<h3 id="label-CT009+-E2-80-94+CPF+duplicado+no+cadastro+-E2-80-94+risco+20">CT009 — CPF duplicado no cadastro — risco 20<span><a href="#label-CT009+-E2-80-94+CPF+duplicado+no+cadastro+-E2-80-94+risco+20">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> dois alunos podem compartilhar CPF ou o conflito pode  ser devolvido com código/mensagem inadequados.</p>
+</li><li>
+<p><strong>Evidência:</strong> <code>existsByCpf()</code> no repositório, verificação prévia no serviço,  coluna <code>cpf</code> única e tratamento de <code>RecursoDuplicadoException</code>/restrição do  banco como 409.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> existem duas linhas de defesa com caminhos de  exceção diferentes, sobretudo em gravações concorrentes.</p>
+</li><li>
+<p><strong>Consequência:</strong> quebra de identidade do aluno e ambiguidade em edição e  exclusão.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> serviço, repositório, banco, handler e frontend.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> validar conflito sequencial e complementar com cenário  concorrente controlado, confirmando que somente um registro persiste.</p>
+</li></ul>
+
+<h3 id="label-CT010+-E2-80-94+E-mail+duplicado+case-insensitive+-E2-80-94+risco+20">CT010 — E-mail duplicado case-insensitive — risco 20<span><a href="#label-CT010+-E2-80-94+E-mail+duplicado+case-insensitive+-E2-80-94+risco+20">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> diferenças de caixa ou espaços podem contornar a  unicidade ou gerar resposta inconsistente.</p>
+</li><li>
+<p><strong>Evidência:</strong> <code>normalizarEmail()</code> aplica <code>trim().toLowerCase()</code>;  <code>existsByEmailIgnoreCase()</code> consulta sem diferenciar caixa; a coluna é única.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> a regra depende da composição entre  normalização da aplicação, consulta derivada do Spring Data e collation do  banco.</p>
+</li><li>
+<p><strong>Consequência:</strong> contatos duplicados, associação ambígua e perda de confiança  nos dados.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> frontend/API, serviço, repositório, banco e handler.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> testar caixa, espaços externos e atualização, sempre  consultando a quantidade final de registros.</p>
+</li></ul>
+
+<h3 id="label-CT014+-E2-80-94+Exclus-C3-A3o+confirmada+-E2-80-94+risco+20">CT014 — Exclusão confirmada — risco 20<span><a href="#label-CT014+-E2-80-94+Exclus-C3-A3o+confirmada+-E2-80-94+risco+20">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> o ID em estado local pode não corresponder ao nome  mostrado, a exclusão pode ocorrer antes da confirmação ou a lista pode  permanecer divergente do banco.</p>
+</li><li>
+<p><strong>Evidência:</strong> <code>abrirExclusao()</code> guarda o objeto em  <code>estado.alunoParaExcluir</code>; <code>excluirAluno()</code> envia o ID guardado;  <code>AlunoService.excluir()</code> carrega e remove fisicamente a entidade.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> ação assíncrona e irreversível atravessa estado  local, diálogo, API e persistência.</p>
+</li><li>
+<p><strong>Consequência:</strong> perda definitiva do registro errado ou falsa indicação de  sucesso.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> frontend, controller, serviço, repositório e banco.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> usar dois alunos visualmente distintos, conferir  nome/ID no diálogo e validar por listagem e <code>GET</code> após a confirmação.</p>
+</li></ul>
+
+<h3 id="label-CT013+-E2-80-94+Atualiza-C3-A7-C3-A3o+com+CPF+de+outro+aluno+-E2-80-94+risco+16">CT013 — Atualização com CPF de outro aluno — risco 16<span><a href="#label-CT013+-E2-80-94+Atualiza-C3-A7-C3-A3o+com+CPF+de+outro+aluno+-E2-80-94+risco+16">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> a consulta que ignora o próprio ID pode ignorar o  registro errado ou deixar passar o CPF de terceiro.</p>
+</li><li>
+<p><strong>Evidência:</strong> <code>existsByCpfAndIdNot(cpf, id)</code> e  <code>verificarDuplicidadeNaAtualizacao()</code>.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> predicado composto e dependência de dois  registros são fontes comuns de inversão de condição.</p>
+</li><li>
+<p><strong>Consequência:</strong> se a defesa do banco funcionar, conflito genérico; se não,  quebra de unicidade. O impacto foi limitado a 4 porque a coluna única fornece  proteção complementar.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> serviço, repositório, banco, handler e interface.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> verificar que nenhum campo do segundo aluno mudou depois  do 409 e repetir o cenário para e-mail.</p>
+</li></ul>
+
+<h3 id="label-CT012+-E2-80-94+Atualiza-C3-A7-C3-A3o+mantendo+CPF+e+e-mail+-E2-80-94+risco+16">CT012 — Atualização mantendo CPF e e-mail — risco 16<span><a href="#label-CT012+-E2-80-94+Atualiza-C3-A7-C3-A3o+mantendo+CPF+e+e-mail+-E2-80-94+risco+16">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> o sistema pode comparar o registro consigo mesmo e  bloquear qualquer atualização com falso 409.</p>
+</li><li>
+<p><strong>Evidência:</strong> os métodos <code>existsBy...AndIdNot</code> foram criados especificamente  para excluir o ID atual.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> é o complemento lógico de CT013; um erro no  predicado pode fazer um dos dois cenários passar e o outro falhar.</p>
+</li><li>
+<p><strong>Consequência:</strong> indisponibilidade generalizada da edição, embora os dados  existentes permaneçam íntegros.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> serviço, repositório, handler e frontend.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> manter exatamente CPF/e-mail, alterar um único campo e  validar que não houve normalização destrutiva.</p>
+</li></ul>
+
+<h3 id="label-CT001+-E2-80-94+Inicializa-C3-A7-C3-A3o+e+listagem+-E2-80-94+risco+16">CT001 — Inicialização e listagem — risco 16<span><a href="#label-CT001+-E2-80-94+Inicializa-C3-A7-C3-A3o+e+listagem+-E2-80-94+risco+16">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> a carga assíncrona pode não substituir o estado de  carregamento, não atualizar os resumos ou falhar ao renderizar um item.</p>
+</li><li>
+<p><strong>Evidência:</strong> <code>DOMContentLoaded</code> chama <code>carregarAlunos()</code>, que atualiza  estado, resumo, listagem e texto de atualização; a API mapeia <code>GET   /api/alunos</code>.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> a lista é a origem de pesquisa, edição,  exclusão e três indicadores, ampliando a superfície do caso.</p>
+</li><li>
+<p><strong>Consequência:</strong> a aplicação aparenta indisponibilidade e bloqueia os fluxos  dependentes mesmo com a API saudável.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> frontend, controller, serviço, repositório e API.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> validar lista vazia, lista com múltiplos registros,  ordenação por ID e consistência dos três indicadores.</p>
+</li></ul>
+
+<h3 id="label-CT019+-E2-80-94+DELETE+204+sem+corpo+-E2-80-94+risco+15">CT019 — DELETE 204 sem corpo — risco 15<span><a href="#label-CT019+-E2-80-94+DELETE+204+sem+corpo+-E2-80-94+risco+15">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> a API pode retornar corpo/código incorreto, responder  antes da efetivação ou não remover o registro.</p>
+</li><li>
+<p><strong>Evidência:</strong> controller usa <code>noContent()</code>, serviço busca antes de excluir e  <code>requisitarJson()</code> trata 204 sem tentar desserializar JSON.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> contrato 204 tem tratamento específico no  frontend e efeito persistente separado da resposta.</p>
+</li><li>
+<p><strong>Consequência:</strong> perda ou retenção silenciosa de dados e quebra de clientes  da API.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> controller, serviço, repositório, banco e cliente HTTP.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> verificar cabeçalhos, corpo de zero bytes e 404 em  consulta posterior.</p>
+</li></ul>
+
+<h3 id="label-CT007+-E2-80-94+CPF+com+quantidade+inv-C3-A1lida+-E2-80-94+risco+12">CT007 — CPF com quantidade inválida — risco 12<span><a href="#label-CT007+-E2-80-94+CPF+com+quantidade+inv-C3-A1lida+-E2-80-94+risco+12">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> frontend e backend podem divergir depois da remoção  de máscara, aceitando ou rejeitando comprimentos diferentes.</p>
+</li><li>
+<p><strong>Evidência:</strong> JavaScript testa comprimento 11; Bean Validation usa  <code>\d{11}</code>; a entidade limita a coluna a 11.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> três camadas expressam partes diferentes da  regra; o frontend verifica comprimento, enquanto o backend também exige  somente dígitos.</p>
+</li><li>
+<p><strong>Consequência:</strong> cadastro inválido ou comportamento diferente entre UI e API.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> frontend, DTO, handler e banco.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> executar 10, 11 e 12 dígitos e complementar com letras  diretamente na API.</p>
+</li></ul>
+
+<h3 id="label-CT005+-E2-80-94+Cadastro+com+campos+opcionais+-E2-80-94+risco+12">CT005 — Cadastro com campos opcionais — risco 12<span><a href="#label-CT005+-E2-80-94+Cadastro+com+campos+opcionais+-E2-80-94+risco+12">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> telefone vazio pode não virar <code>null</code>, ou padrões de  matrícula/situação podem ser incorretos quando omitidos pela API.</p>
+</li><li>
+<p><strong>Evidência:</strong> serviço aplica <code>LocalDate.now()</code> e <code>Boolean.TRUE</code>;  <code>normalizarTelefone()</code> converte vazio em <code>null</code>. Porém a UI preenche e envia  matrícula e situação.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> há ramos condicionais e transformação, mas o  desenho atual não alcança toda a hipótese.</p>
+</li><li>
+<p><strong>Consequência:</strong> registros com situação ou data errada e inconsistência entre  clientes da API.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> frontend, serviço e persistência.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> separar o caso em UI e API; no caso de API, remover  completamente as propriedades <code>dataMatricula</code> e <code>ativo</code> do JSON.</p>
+</li></ul>
+
+<h3 id="label-CT020+-E2-80-94+Persist-C3-AAncia+H2+e+reinicializa-C3-A7-C3-A3o+-E2-80-94+risco+12">CT020 — Persistência H2 e reinicialização — risco 12<span><a href="#label-CT020+-E2-80-94+Persist-C3-AAncia+H2+e+reinicializa-C3-A7-C3-A3o+-E2-80-94+risco+12">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> dados podem não estar visíveis durante a mesma  execução ou podem sobreviver a um reinício contra a especificação.</p>
+</li><li>
+<p><strong>Evidência:</strong> URL <code>jdbc:h2:mem:academiadb</code> e  <code>spring.jpa.hibernate.ddl-auto=create-drop</code>.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> o resultado depende do ciclo real do processo,  transações e conexão; não pode ser provado apenas pela configuração.</p>
+</li><li>
+<p><strong>Consequência:</strong> ambiente de teste contaminado ou perda/retensão de dados  contrária ao contrato didático.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> JPA, datasource, H2 e processo da aplicação.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> distinguir recarregar página, reiniciar contexto e  encerrar processo; registrar PID e consultar o banco em cada etapa.</p>
+</li></ul>
+
+<h3 id="label-CT016+-E2-80-94+Pesquisa+e+filtros+combinados+-E2-80-94+risco+12">CT016 — Pesquisa e filtros combinados — risco 12<span><a href="#label-CT016+-E2-80-94+Pesquisa+e+filtros+combinados+-E2-80-94+risco+12">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> normalização, combinação booleana ou contador pode  exibir alunos fora do filtro ou omitir correspondências.</p>
+</li><li>
+<p><strong>Evidência:</strong> <code>renderizarListagem()</code> combina nome/CPF/e-mail com ativo/inativo  e decide entre tabela, vazio e sem resultados.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> um único caso reúne múltiplas condições e estados  do DOM.</p>
+</li><li>
+<p><strong>Consequência:</strong> consulta incorreta sem alterar os dados persistidos.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> estado e renderização no frontend.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> usar tabela de decisão com termo vazio/preenchido,  situação e correspondência por cada campo.</p>
+</li></ul>
+
+<h3 id="label-CT015+-E2-80-94+Cancelamento+da+exclus-C3-A3o+-E2-80-94+risco+10">CT015 — Cancelamento da exclusão — risco 10<span><a href="#label-CT015+-E2-80-94+Cancelamento+da+exclus-C3-A3o+-E2-80-94+risco+10">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>Hipótese de defeito:</strong> fechar por um dos mecanismos pode disparar ou deixar  pronta uma exclusão indevida.</p>
+</li><li>
+<p><strong>Evidência:</strong> exclusão ocorre apenas no evento do botão confirmar; fechar,  cancelar e <code>Esc</code> usam o comportamento do diálogo.</p>
+</li><li>
+<p><strong>Motivo da probabilidade:</strong> o caminho é simples, reduzindo a probabilidade,  mas há três formas de fechar a serem verificadas.</p>
+</li><li>
+<p><strong>Consequência:</strong> uma falha causaria perda física de registro, justificando  impacto 5.</p>
+</li><li>
+<p><strong>Camadas afetadas:</strong> eventos e estado do frontend.</p>
+</li><li>
+<p><strong>Ação preventiva:</strong> executar separadamente botão fechar, cancelar e <code>Esc</code>,  monitorando ausência de <code>DELETE</code>.</p>
+</li></ul>
+
+<h2 id="label-6.+Hotspots+por+funcionalidade+t-C3-A9cnica">6. Hotspots por funcionalidade técnica<span><a href="#label-6.+Hotspots+por+funcionalidade+t-C3-A9cnica">&para;</a> <a href="#top">&uarr;</a></span></h2>
+
+<p>Os grupos abaixo são sobrepostos: um mesmo caso pode contribuir para mais de um hotspot. A avaliação representa concentração qualitativa, não soma independente.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Grupo</th><th scope="col">Casos mais representativos</th><th scope="col">Probabilidade concentrada</th><th scope="col">Impacto concentrado</th><th scope="col">Evidência de hotspot</th></tr></thead><tbody><tr><td>Cadastro</td><td>CT004–CT010</td><td>Alta</td><td>Crítico</td><td>Muitas regras, padrões, normalização, unicidade e criação persistente</td></tr><tr><td>Atualização</td><td>CT011–CT013</td><td>Muito alta</td><td>Crítico</td><td>Predicados com exclusão do próprio ID e sobrescrita/preservação de estado</td></tr><tr><td>Exclusão</td><td>CT014, CT015, CT019</td><td>Moderada</td><td>Crítico</td><td>Remoção física, confirmação, estado local e contrato 204</td></tr><tr><td>Consulta e listagem</td><td>CT001–CT003, CT016–CT018</td><td>Moderada</td><td>Alto</td><td>Estado assíncrono compartilhado por indicadores, filtros e ações</td></tr><tr><td>Validações</td><td>CT006–CT010, CT012, CT013</td><td>Alta</td><td>Crítico</td><td>Regras duplicadas, limites e unicidade em camadas diferentes</td></tr><tr><td>API REST</td><td>CT004, CT009–CT014, CT017–CT019</td><td>Alta</td><td>Crítico</td><td>Cinco métodos/contratos e corpos distintos de sucesso e erro</td></tr><tr><td>Persistência</td><td>CT004, CT005, CT009–CT014, CT019, CT020</td><td>Alta</td><td>Crítico</td><td>Restrições únicas, transações, exclusão física e ciclo de vida efêmero</td></tr><tr><td>Tratamento de erros</td><td>CT003, CT006–CT010, CT013, CT018</td><td>Alta</td><td>Alto</td><td>400, 404, 409, 500 e erro de rede seguem caminhos distintos</td></tr></tbody></table></div>
+<p><strong>Maior probabilidade:</strong> atualização, seguida por cadastro/validações.</p>
+
+<p><strong>Maior impacto:</strong> persistência e exclusão, seguidas por unicidade no cadastro e na atualização.</p>
+
+<p>Inferência: atualização ocupa o primeiro hotspot de probabilidade porque cada operação combina mais estados prévios e posteriores do que o cadastro. Essa inferência é baseada na estrutura do código, não em frequência histórica.</p>
+
+<h2 id="label-7.+Ordem+recomendada+de+execu-C3-A7-C3-A3o">7. Ordem recomendada de execução<span><a href="#label-7.+Ordem+recomendada+de+execu-C3-A7-C3-A3o">&para;</a> <a href="#top">&uarr;</a></span></h2>
+
+<h3 id="label-P0+-E2-80-94+Executar+imediatamente">P0 — Executar imediatamente<span><a href="#label-P0+-E2-80-94+Executar+imediatamente">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ol><li>
+<p><strong>CT004</strong> — cria o primeiro registro e valida o caminho principal.</p>
+</li><li>
+<p><strong>CT005 como preparação de segundo registro</strong> — usar dados distintos; para  validar os padrões de fato, complementar com chamada direta sem as  propriedades opcionais.</p>
+</li><li>
+<p><strong>CT009</strong> — tenta repetir o CPF do primeiro registro.</p>
+</li><li>
+<p><strong>CT010</strong> — tenta repetir o e-mail alterando a caixa.</p>
+</li><li>
+<p><strong>CT011</strong> — atualiza um registro e confirma o estado persistido.</p>
+</li><li>
+<p><strong>CT014</strong> — exclui pela interface e valida lista/indicadores.</p>
+</li></ol>
+
+<p>CT005 é antecipado por dependência de massa, não por superar o risco dos casos seguintes.</p>
+
+<h3 id="label-P1+-E2-80-94+Executar+antes+da+libera-C3-A7-C3-A3o">P1 — Executar antes da liberação<span><a href="#label-P1+-E2-80-94+Executar+antes+da+libera-C3-A7-C3-A3o">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ol><li>
+<p><strong>CT001</strong> — confirma que a listagem e os resumos suportam os demais fluxos.</p>
+</li><li>
+<p><strong>CT012</strong> — garante que o próprio CPF/e-mail não bloqueiam a atualização.</p>
+</li><li>
+<p><strong>CT013</strong> — usa os dois registros para validar CPF de terceiro.</p>
+</li><li>
+<p><strong>CT007</strong> — cobre a regra estrutural do identificador.</p>
+</li><li>
+<p><strong>CT019</strong> — valida o contrato de exclusão diretamente na API.</p>
+</li><li>
+<p><strong>CT015</strong> — confirma ausência de efeito nos três cancelamentos.</p>
+</li><li>
+<p><strong>CT016</strong> — valida pesquisa, filtro e contador sobre a massa remanescente.</p>
+</li><li>
+<p><strong>CT020</strong> — deve ser o último do ciclo, pois reiniciar a aplicação destrói a  massa de dados.</p>
+</li></ol>
+
+<h3 id="label-P2+-E2-80-94+Executar+na+regress-C3-A3o">P2 — Executar na regressão<span><a href="#label-P2+-E2-80-94+Executar+na+regress-C3-A3o">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ol><li>
+<p><strong>CT006</strong> — limite mínimo do nome.</p>
+</li><li>
+<p><strong>CT008</strong> — formato inválido de e-mail.</p>
+</li><li>
+<p><strong>CT018</strong>, após corrigir os nomes dos campos esperados — contrato 404.</p>
+</li><li>
+<p><strong>CT003</strong> — indisponibilidade e nova tentativa de listagem.</p>
+</li><li>
+<p><strong>CT017</strong> — contrato positivo de consulta por ID.</p>
+</li></ol>
+
+<h3 id="label-P3+-E2-80-94+Executar+quando+houver+tempo+dispon-C3-ADvel">P3 — Executar quando houver tempo disponível<span><a href="#label-P3+-E2-80-94+Executar+quando+houver+tempo+dispon-C3-ADvel">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ol><li>
+<p><strong>CT002</strong> — estado visual para banco vazio.</p>
+</li></ol>
+
+<p>P3 não significa ausência de valor. O caso é simples, tem baixo impacto sobre integridade e pode ser observado naturalmente após CT020.</p>
+
+<h2 id="label-8.+Lacunas+preditivas+e+novos+casos+recomendados">8. Lacunas preditivas e novos casos recomendados<span><a href="#label-8.+Lacunas+preditivas+e+novos+casos+recomendados">&para;</a> <a href="#top">&uarr;</a></span></h2>
+
+<p>Os identificadores abaixo continuam a sequência existente. Eles são propostas e não devem ser considerados cobertura atual.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Novo caso</th><th scope="col">Objetivo</th><th scope="col">Probabilidade</th><th scope="col">Impacto</th><th scope="col">Risco</th><th scope="col">Justificativa</th></tr></thead><tbody><tr><td>CT021</td><td>Submeter CPF com 11 dígitos, mas semanticamente inválido</td><td>5</td><td>4</td><td>20 — Crítico</td><td>O código aceita qualquer <code>\d{11}</code>; é necessária decisão explícita de requisito para evitar identidades fictícias</td></tr><tr><td>CT022</td><td>Atualizar aluno usando e-mail de outro aluno, inclusive com caixa diferente</td><td>4</td><td>5</td><td>20 — Crítico</td><td>O caso simétrico de CPF existe, mas a consulta <code>existsByEmailIgnoreCaseAndIdNot</code> não tem caso negativo dedicado</td></tr><tr><td>CT023</td><td>Omitir <code>dataMatricula</code> e <code>ativo</code> em POST direto</td><td>4</td><td>4</td><td>16 — Alto</td><td>CT005 não alcança esses ramos pela UI; o serviço deve aplicar hoje e <code>true</code></td></tr><tr><td>CT024</td><td>Enviar nascimento igual a hoje e nascimento futuro</td><td>4</td><td>4</td><td>16 — Alto</td><td><code>@Past</code> e a comparação do JavaScript usam fronteira estrita; DT014 existe, mas não é exercido</td></tr><tr><td>CT025</td><td>Enviar matrícula futura e confirmar ausência de persistência</td><td>4</td><td>4</td><td>16 — Alto</td><td>DT015 existe sem caso; frontend e <code>@PastOrPresent</code> precisam concordar</td></tr><tr><td>CT026</td><td>Forçar erro de persistência durante cadastro/atualização e validar rollback</td><td>3</td><td>5</td><td>15 — Alto</td><td>Transações são declaradas, mas não há evidência de recuperação nem consistência após falha</td></tr><tr><td>CT027</td><td>Enviar o mesmo cadastro de CPF/e-mail concorrentemente</td><td>3</td><td>5</td><td>15 — Alto</td><td>A checagem prévia tem janela de corrida; a restrição única e o handler devem garantir um único registro e 409</td></tr><tr><td>CT028</td><td>Chamar API diretamente com valores que o frontend normaliza</td><td>4</td><td>4</td><td>16 — Alto</td><td>CPF com máscara não é removido pelo serviço; e-mail recebe <code>trim/lowercase</code>; há risco de divergência entre clientes</td></tr><tr><td>CT029</td><td>Enviar telefone com 9, 10, 11, 12 dígitos e caracteres</td><td>4</td><td>3</td><td>12 — Alto</td><td>RN006 só aparece incidentalmente em CT004/CT005 e não possui fronteiras próprias</td></tr><tr><td>CT030</td><td>Enviar plano ausente e plano desconhecido</td><td>3</td><td>4</td><td>12 — Alto</td><td><code>null</code> segue Bean Validation; enum inválido segue <code>HttpMessageNotReadableException</code>, caminhos diferentes sem cobertura</td></tr><tr><td>CT031</td><td>Enviar JSON malformado, data fora do ISO e tipos incompatíveis</td><td>4</td><td>3</td><td>12 — Alto</td><td>O handler possui caminho específico ainda não testado e mensagem agregada para diferentes causas</td></tr><tr><td>CT032</td><td>Excluir ID inexistente</td><td>3</td><td>4</td><td>12 — Alto</td><td>Busca e exclusão compartilham a exceção 404, mas apenas GET inexistente está coberto</td></tr><tr><td>CT033</td><td>Enviar nome com 3, 100 e 101 caracteres</td><td>3</td><td>3</td><td>9 — Moderado</td><td>Só o limite inferior inválido é testado; DT007 já prevê 101 caracteres</td></tr><tr><td>CT034</td><td>Enviar CPF com letras diretamente à API</td><td>3</td><td>4</td><td>12 — Alto</td><td>O frontend remove caracteres, portanto o padrão <code>\d{11}</code> só é isolado por cliente direto; DT010 não é usado</td></tr><tr><td>CT035</td><td>Simular 500 e resposta não JSON em salvar/excluir/listar</td><td>3</td><td>4</td><td>12 — Alto</td><td>O frontend depende de <code>content-type</code> e de mensagens alternativas; o handler genérico 500 não tem caso</td></tr><tr><td>CT036</td><td>Repetir edição/exclusão após a lista local ficar desatualizada</td><td>3</td><td>5</td><td>15 — Alto</td><td>O frontend guarda objetos e IDs em memória; remoção concorrente pode gerar 404 após o diálogo abrir</td></tr></tbody></table></div>
+<h3 id="label-8.1+Observa-C3-A7-C3-B5es+sobre+as+lacunas">8.1 Observações sobre as lacunas<span><a href="#label-8.1+Observa-C3-A7-C3-B5es+sobre+as+lacunas">&para;</a> <a href="#top">&uarr;</a></span></h3>
+<ul><li>
+<p><strong>CPF semântico:</strong> atualmente a ausência de validação é uma limitação  declarada, portanto CT021 é primeiro um teste de caracterização e uma decisão  de requisito. Só deve esperar rejeição depois que a regra for aprovada.</p>
+</li><li>
+<p><strong>Plano inexistente, JSON malformado e datas inválidas:</strong> estão dentro do  contrato funcional de erro já implementado pelo handler; não exigem ampliar o  escopo para segurança.</p>
+</li><li>
+<p><strong>Falhas de persistência:</strong> exigem ambiente controlável, mas continuam sendo  testes funcionais de atomicidade e recuperação, não testes de desempenho.</p>
+</li><li>
+<p><strong>Divergência frontend/backend:</strong> os casos devem comparar respostas da UI e da  API para a mesma classe de entrada, sem pressupor que a máscara será aceita  pelo backend.</p>
+</li></ul>
+
+<h2 id="label-9.+Conclus-C3-A3o">9. Conclusão<span><a href="#label-9.+Conclus-C3-A3o">&para;</a> <a href="#top">&uarr;</a></span></h2>
+
+<p>O conjunto atual cobre o caminho nominal do CRUD, mas a qualidade dos metadados não permite usar o resumo e a matriz sem correção. O maior risco não está na quantidade de casos declarados como críticos, e sim na combinação de:</p>
+<ol><li>
+<p>atualização de estado existente;</p>
+</li><li>
+<p>unicidade e normalização de CPF/e-mail;</p>
+</li><li>
+<p>exclusão física;</p>
+</li><li>
+<p>persistência e transações;</p>
+</li><li>
+<p>diferenças entre o que a interface envia e o que a API aceita.</p>
+</li></ol>
+
+<p>Antes de uma decisão de liberação, a equipe deve corrigir a rastreabilidade, separar o teste de padrões do backend do CT005, ajustar o contrato do CT018 e executar P0/P1 com confirmação direta no banco ou por consultas subsequentes. Sem histórico de execução, qualquer evolução para “probabilidade estatística” exigirá registrar, por caso e versão, resultados, defeitos encontrados, severidade, área alterada e recorrência.</p>
+
+    <footer>
+      Documento gerado a partir de ANALISE_PREDITIVA_CASOS_DE_TESTE.md.
+    </footer>
+  </main>
+</body>
+</html>
